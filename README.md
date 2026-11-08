@@ -18,11 +18,23 @@ extension that reveals the facts, 100% locally, without judging websites.
 
 ## See it in action
 
-| | |
-|---|---|
-| ![Official site](docs/official.png) | **Official site.** The real address, letter by letter, with a green "Official" badge for well-known brands. |
-| ![Unknown site](docs/unknown-site.png) | **Unknown site.** No trap found: the extension shows the facts and lets you decide. One click adds it to your trusted sites. |
-| ![Look-alike in a QR code](docs/qr-lookalike.png) | **Look-alike caught in a QR code.** `microso1t.com`: the "1" is a digit, not the letter L. Right-click any QR image to reveal its link. |
+### Official site
+
+The real address, letter by letter, with a green "Official" badge for well-known brands.
+
+![Official site](docs/official.png)
+
+### Unknown site
+
+No trap found: the extension shows the facts and lets you decide. One click adds it to your trusted sites.
+
+![Unknown site](docs/unknown-site.png)
+
+### Look-alike caught in a QR code
+
+`microso1t.com`: the "1" is a digit, not the letter L. Right-click any QR image to reveal its link.
+
+![Look-alike in a QR code](docs/qr-lookalike.png)
 
 <img src="docs/popup.png" alt="Settings popup" width="280" align="right">
 

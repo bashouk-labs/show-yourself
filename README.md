@@ -5,7 +5,7 @@
 Scams don't hack your computer. They hack what you see. Show Yourself is a Chrome
 extension that reveals the facts, 100% locally, without judging websites.
 
-![A lying link revealed](store/screenshots/en-2-link.png)
+![Hovering fake Apple, PayPal and Microsoft links](docs/demo.gif)
 
 ## What it does
 

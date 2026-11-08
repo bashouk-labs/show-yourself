@@ -18,6 +18,12 @@ extension that reveals the facts, 100% locally, without judging websites.
 
 ## See it in action
 
+### Trap caught
+
+`pаypal.com` looks real, but its "а" is a Cyrillic letter. The magnifier shows it in red, explains the trick and tells you not to click.
+
+![Fake PayPal caught](docs/trap.png)
+
 ### Official site
 
 The real address, letter by letter, with a green "Official" badge for well-known brands.

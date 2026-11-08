@@ -1,5 +1,7 @@
 # Show Yourself
 
+🇬🇧 English · 🇫🇷 [Français](README.fr.md)
+
 **See who's really behind a link, a sender or a file, before you click.**
 
 Scams don't hack your computer. They hack what you see. Show Yourself is a Chrome
@@ -58,7 +60,7 @@ The interface is in French or English, following Chrome's language.
 
 ## Demo
 
-![Hovering fake Apple, PayPal and Microsoft links](docs/demo.gif)
+![Hovering a fake Microsoft link, a bit.ly link, then the real PayPal](docs/demo.gif)
 
 ## Privacy
 

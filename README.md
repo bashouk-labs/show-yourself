@@ -16,6 +16,28 @@ extension that reveals the facts, 100% locally, without judging websites.
   characters are unmasked; suspicious downloads are paused until you decide.
 - **QR codes**: right-click an image to reveal the link hidden in a QR code.
 
+## See it in action
+
+| | |
+|---|---|
+| ![Official site](docs/official.png) | **Official site.** The real address, letter by letter, with a green "Official" badge for well-known brands. |
+| ![Unknown site](docs/unknown-site.png) | **Unknown site.** No trap found: the extension shows the facts and lets you decide. One click adds it to your trusted sites. |
+| ![Look-alike in a QR code](docs/qr-lookalike.png) | **Look-alike caught in a QR code.** `microso1t.com`: the "1" is a digit, not the letter L. Right-click any QR image to reveal its link. |
+
+<img src="docs/popup.png" alt="Settings popup" width="280" align="right">
+
+### The popup
+
+- Turn protection on or off.
+- See how many traps were spotted and clicks blocked in the last 7 days.
+- Choose when the magnifier appears: always, only when suspicious, or never.
+- Block clicks on dangerous links with a warning page.
+- Manage your trusted sites: they never show the magnifier.
+
+The interface is in French or English, following Chrome's language.
+
+<br clear="right">
+
 ## Privacy
 
 Everything runs on your computer: no account, no server, no tracking.

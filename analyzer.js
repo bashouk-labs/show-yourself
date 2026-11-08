@@ -608,7 +608,7 @@
     let inner = null;
     let service = null;
 
-    if (/(^|\.)google\.[a-z.]+$/.test(h) && p === '/url') {
+    if (/^(www\.)?google\.(com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/.test(h) && p === '/url') {
       inner = q.get('q') || q.get('url'); service = 'Google';
     } else if (/\.safelinks\.protection\.outlook\.com$/.test(h)) {
       inner = q.get('url'); service = 'Outlook SafeLinks';

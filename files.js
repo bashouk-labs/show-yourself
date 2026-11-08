@@ -65,7 +65,9 @@
     }
 
     // Warn only on deception: bidi tricks always; other tricks only when the real file runs code.
-    const danger = findings.some((f) => f.code === 'bidi') || (exec && findings.length > 0);
+    // Plain LRM/RLM/ALM marks are normal in RTL text: only overrides/isolates are a trick on their own.
+    const override = /[‪-‮⁦-⁩]/.test(name);
+    const danger = override || (exec && findings.length > 0);
     return { name, ext, exec, findings, danger, tokens: tokens(name) };
   }
 

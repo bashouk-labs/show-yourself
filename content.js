@@ -843,7 +843,8 @@
       email = node.getAttribute('email');
       name = node.getAttribute('name') || node.innerText || '';
     } else if (node.matches('a[href^="mailto:" i]')) {
-      email = decodeURIComponent(node.getAttribute('href').slice(7).split('?')[0]);
+      const raw = node.getAttribute('href').slice(7).split('?')[0];
+      try { email = decodeURIComponent(raw); } catch (e) { email = raw; }
       name = node.innerText || '';
     } else if (node.matches('span[title*="@"]')) {
       email = node.getAttribute('title');
@@ -894,10 +895,16 @@
     }
   }
 
+  function crossOriginLink(node) {
+    if (!node.matches('a[href]')) return false;
+    try { return new URL(node.getAttribute('href'), location.href).origin !== location.origin; } catch (e) { return false; }
+  }
+
   function anchorFrom(target) {
     if (!(target instanceof Element)) return null;
     const f = target.closest(FILE_SEL);
-    if (f && fileInfo(f)) return f;
+    // Browsers ignore `download` on cross-origin links: those navigate, so judge the destination.
+    if (f && fileInfo(f) && !crossOriginLink(f)) return f;
     const s = target.closest(SENDER_SEL);
     if (s && senderInfo(s)) return s;
     return target.closest('a[href]');
@@ -1077,8 +1084,11 @@
         return;
       }
       closeBlocker();
+      const dest = typeof anchor.href === 'string' ? anchor.href : new URL(anchor.getAttribute('href') || anchor.getAttribute('xlink:href'), location.href).href;
       if (newTab) {
-        window.open(anchor.href, '_blank', 'noopener');
+        window.open(dest, '_blank', 'noopener');
+      } else if (typeof anchor.click !== 'function') {
+        location.assign(dest);
       } else {
         bypassAnchor = anchor;
         anchor.click();

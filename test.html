@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Lets the extension tell this page it is active (avoids a double bubble) -->
+  <meta name="show-yourself-test-page" content="1" />
+  <title>Show Yourself · Banc d'essai</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #090d16;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    h2 { margin: 36px 0 6px; font-size: 19px; }
+    .subtitle, .section-intro { margin: 0; color: #94a3b8; font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card.trap { border-top: 3px solid #ef4444; }
+    .card.legit { border-top: 3px solid #64748b; }
+    .card h3 { margin: 0 0 4px; font-size: 15px; }
+    .card p { margin: 0 0 12px; font-size: 13px; color: #94a3b8; }
+    .card a {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #1e293b;
+      color: #38bdf8;
+      text-decoration: none;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      font-size: 14px;
+    }
+    .card a:hover, .card a:focus { border-color: #38bdf8; }
+    .expect { font-size: 12px; font-weight: 700; margin-top: 10px; }
+    .expect-danger { color: #f87171; }
+    .expect-caution { color: #fbbf24; }
+    .expect-none { color: #94a3b8; }
+    .notice {
+      margin-top: 36px;
+      padding: 14px 18px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 10px;
+      font-size: 13px;
+      color: #bae6fd;
+    }
+    code { background: #1e293b; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Show Yourself · Banc d'essai</h1>
+    <p class="subtitle">Survolez un lien (ou naviguez avec <code>Tab</code>) pour voir la loupe. Aucun lien n'est cliquable sur cette page.</p>
+
+    <h2>🚨 Pièges : doivent alerter</h2>
+    <p class="section-intro">Le texte de chaque lien imite ce qu'un vrai message de phishing afficherait.</p>
+    <div class="grid" id="traps"></div>
+
+    <h2>✅ Sites légitimes : ne doivent PAS alerter</h2>
+    <p class="section-intro">Si l'un d'eux passe en orange ou en rouge, c'est un bug (fausse alerte) : merci de le signaler !</p>
+    <div class="grid" id="legit"></div>
+
+    <div class="notice">
+      💡 <strong>Pour tester avec l'extension installée :</strong> dans <code>chrome://extensions</code>, ouvrez « Détails »
+      de <em>Show Yourself</em> et activez <strong>« Autoriser l'accès aux URL de fichier »</strong>.
+      Sinon, cette page charge automatiquement une copie locale du script pour que vous puissiez tester tout de suite.
+      <div id="mode" style="margin-top:8px;font-weight:700"></div>
+    </div>
+  </div>
+
+  <script>
+    // Each case: [title, explanation, href, visible link text, expected level]
+    const TRAPS = [
+      ['« rn » au lieu de « m »', 'r + n collés imitent un m. Le 0 remplace le o.',
+        'https://login.rnicr0soft.com/oauth2/v2.0/authorize?client_id=981273', 'Se connecter à Microsoft 365 (login.microsoft.com)', 'danger'],
+      ['« I » majuscule au lieu de « l »', 'Le navigateur lit « paypai.com » : un faux PayPal.',
+        'https://secu1e.paypaI.com/myaccount/summary', 'Vérifier mon compte PayPal', 'danger'],
+      ['Faux début d’adresse', 'Le vrai site est pirate.fr, tout le reste est du décor. En http en plus.',
+        'http://paypal.com.securite-client.pirate.fr/login/auth.php', 'Espace sécurisé PayPal', 'danger'],
+      ['Alphabet cyrillique (Punycode)', '« аррӏе » est écrit avec des lettres cyrilliques.',
+        'https://xn--80ak6aa92e.com/id/manage', 'Gérer mon identifiant Apple', 'danger'],
+      ['Une seule lettre étrangère', 'Le « а » de pаypal est cyrillique, le reste est latin.',
+        'https://xn--pypal-4ve.com/signin', 'PayPal · Connexion', 'danger'],
+      ['Le texte du lien ment', 'Le texte affiche paypal.com, le lien va ailleurs.',
+        'https://compte-verification.net/paypal', 'https://www.paypal.com/signin', 'danger'],
+      ['Piège « @ »', 'Tout ce qui est avant « @ » est ignoré : on va sur evil-site.com.',
+        'https://www.ameli.fr@evil-site.com/remboursement', 'Votre remboursement Ameli', 'danger'],
+      ['Redirection Outlook cachée', 'Outlook SafeLinks enveloppe le vrai lien. On le déballe.',
+        'https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fimpots-remboursement.fr%2Fdossier&data=05', 'Consulter mon dossier', 'danger'],
+      ['Hébergement gratuit', 'N’importe qui peut créer un site en .github.io.',
+        'https://paypal-login-secure.github.io/', 'Connexion PayPal', 'danger'],
+      ['Faute de frappe visuelle', '« steamcommunlty » : un l à la place du i.',
+        'https://steamcommunlty.com/tradeoffer/new', 'Accepter l’échange Steam', 'danger'],
+      ['Lien raccourci', 'La destination est cachée derrière bit.ly.',
+        'https://bit.ly/3xYzAbC', 'Suivre mon colis', 'caution'],
+      ['Adresse IP brute', 'Les vrais sites n’envoient pas vers une adresse en chiffres.',
+        'http://185.23.45.67/banque/login', 'Accéder à mon espace', 'caution']
+    ];
+
+    const LEGIT = [
+      ['Le vrai PayPal', 'Contient un « l », ne doit pas alerter.', 'https://www.paypal.com/myaccount/summary', 'Mon compte PayPal (paypal.com)', 'none'],
+      ['Le vrai Google', 'Sous-domaine normal.', 'https://accounts.google.com/signin', 'Connexion Google', 'none'],
+      ['Microsoft Learn', 'Contient « rn » (learn) : ne doit pas alerter.', 'https://learn.microsoft.com/fr-fr/', 'Documentation Microsoft', 'none'],
+      ['Outlook', 'outlook.live.com appartient bien à Microsoft.', 'https://outlook.live.com/mail/', 'Ouvrir outlook.com', 'none'],
+      ['Wikipédia en français', '« fr. » au début n’est pas un piège.', 'https://fr.wikipedia.org/wiki/Hameçonnage', 'Hameçonnage · Wikipédia', 'none'],
+      ['Impôts', 'Site officiel de l’État.', 'https://www.impots.gouv.fr/accueil', 'Mon espace particulier', 'none'],
+      ['Amazon UK', 'Extension en deux parties (.co.uk).', 'https://www.amazon.co.uk/gp/cart', 'Panier Amazon', 'none'],
+      ['Yahoo Finance', '« finance » ressemble à « binance » mais n’est pas un piège.', 'https://finance.yahoo.com/', 'Yahoo Finance', 'none'],
+      ['Domaine allemand accentué', 'Accents légitimes : simple information.', 'https://münchen.de/', 'Ville de Munich', 'none'],
+      ['Domaine russe', 'Alphabet cyrillique légitime : simple information.', 'https://xn--h1alffa9f.xn--p1ai/', 'россия.рф', 'none'],
+      ['Redirection Facebook vers un vrai site', 'Déballée, mène au Monde.', 'https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.lemonde.fr%2F&h=AT0', 'lemonde.fr', 'none'],
+      ['GitHub Docs', 'Lien de référence propre.', 'https://docs.github.com/fr/authentication', 'Documentation GitHub (docs.github.com)', 'none']
+    ];
+
+    const EXPECT_TEXT = { danger: '🚨 Attendu : Piège probable', caution: '⚠️ Attendu : À vérifier', none: 'Attendu : Aucun piège détecté' };
+
+    function addCards(containerId, cases, kind) {
+      const container = document.getElementById(containerId);
+      cases.forEach(([title, explanation, href, text, expected]) => {
+        const card = document.createElement('div');
+        card.className = 'card ' + kind;
+        const h3 = document.createElement('h3');
+        h3.textContent = title;
+        const p = document.createElement('p');
+        p.textContent = explanation;
+        const a = document.createElement('a');
+        a.href = href;
+        a.textContent = text;
+        a.addEventListener('click', (e) => e.preventDefault());
+        const exp = document.createElement('div');
+        exp.className = 'expect expect-' + expected;
+        exp.textContent = EXPECT_TEXT[expected];
+        card.append(h3, p, a, exp);
+        container.appendChild(card);
+      });
+    }
+    addCards('traps', TRAPS, 'trap');
+    addCards('legit', LEGIT, 'legit');
+
+    // Fallback: if the extension is not active on this page (file:// access not
+    // allowed), load a local copy of the scripts so the page works right away.
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const mode = document.getElementById('mode');
+        if (document.documentElement.getAttribute('data-show-yourself-extension') === 'active') {
+          mode.textContent = '✅ Mode : extension installée.';
+          return;
+        }
+        mode.textContent = '🧪 Mode : copie locale (extension non détectée sur cette page).';
+        const s0 = document.createElement('script');
+        s0.src = './i18n.js';
+        const s1 = document.createElement('script');
+        s1.src = './analyzer.js';
+        s1.onload = () => {
+          const s2 = document.createElement('script');
+          s2.src = './content.js';
+          document.body.appendChild(s2);
+        };
+        s0.onload = () => document.body.appendChild(s1);
+        document.body.appendChild(s0);
+      }, 600);
+    });
+  </script>
+</body>
+</html>

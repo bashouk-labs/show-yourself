@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1a8"/>
+      <stop offset=".45" stop-color="#e2b54a"/>
+      <stop offset="1" stop-color="#9a6b1c"/>
+    </linearGradient>
+    <linearGradient id="goldDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c99a38"/>
+      <stop offset="1" stop-color="#6f4c12"/>
+    </linearGradient>
+    <radialGradient id="bg" cx=".5" cy=".45" r=".6">
+      <stop offset="0" stop-color="#14402c"/>
+      <stop offset="1" stop-color="#06180f"/>
+    </radialGradient>
+    <radialGradient id="iris" cx=".45" cy=".4" r=".65">
+      <stop offset="0" stop-color="#b8ffd2"/>
+      <stop offset=".35" stop-color="#3ee07f"/>
+      <stop offset=".8" stop-color="#11804a"/>
+      <stop offset="1" stop-color="#0a4a2b"/>
+    </radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2fae6c"/>
+      <stop offset="1" stop-color="#0d5a35"/>
+    </linearGradient>
+    <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0b4f2e"/>
+      <stop offset=".5" stop-color="#2fc874"/>
+      <stop offset="1" stop-color="#0b4f2e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Badge -->
+  <circle cx="64" cy="64" r="62" fill="url(#bg)"/>
+  <circle cx="64" cy="64" r="60" fill="none" stroke="url(#gold)" stroke-width="2"/>
+  <circle cx="64" cy="64" r="46" fill="none" stroke="#e2b54a" stroke-opacity=".35" stroke-width="1"/>
+
+  <!-- Compass rose: diagonal points (green) -->
+  <g transform="translate(64 64)">
+    <g id="diag">
+      <polygon points="0,-44 5,-6 0,0" fill="#2fae6c"/>
+      <polygon points="0,-44 -5,-6 0,0" fill="#14683f"/>
+    </g>
+    <use href="#diag" transform="rotate(45)"/>
+    <use href="#diag" transform="rotate(135)"/>
+    <use href="#diag" transform="rotate(225)"/>
+    <use href="#diag" transform="rotate(315)"/>
+    <!-- Cardinal points (gold) -->
+    <g id="card">
+      <polygon points="0,-60 7,-8 0,0" fill="url(#gold)"/>
+      <polygon points="0,-60 -7,-8 0,0" fill="url(#goldDark)"/>
+    </g>
+    <use href="#card" transform="rotate(90)"/>
+    <use href="#card" transform="rotate(180)"/>
+    <use href="#card" transform="rotate(270)"/>
+  </g>
+
+  <!-- Eye almond -->
+  <path d="M16 64 Q64 24 112 64 Q64 104 16 64 Z" fill="#06180f" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 64 Q64 33 104 64 Q64 95 24 64 Z" fill="none" stroke="url(#band)" stroke-width="5"/>
+
+  <!-- Magnifier lens = iris -->
+  <circle cx="62" cy="62" r="21" fill="url(#iris)"/>
+  <g stroke="#b8ffd2" stroke-opacity=".45" stroke-width=".8" fill="none">
+    <circle cx="62" cy="62" r="15"/>
+    <path d="M62 47 L62 77 M47 62 L77 62 M51.4 51.4 L72.6 72.6 M72.6 51.4 L51.4 72.6"/>
+  </g>
+  <circle cx="62" cy="62" r="8.5" fill="#04140b"/>
+  <circle cx="62" cy="62" r="8.5" fill="none" stroke="#1d7a48" stroke-width="1.5"/>
+  <circle cx="66" cy="57.5" r="3" fill="#fff"/>
+  <circle cx="58" cy="66" r="1.4" fill="#fff" fill-opacity=".85"/>
+  <circle cx="62" cy="62" r="23" fill="none" stroke="url(#gold)" stroke-width="5"/>
+
+  <!-- Handle coming out of the eye -->
+  <line x1="79" y1="79" x2="85" y2="85" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="86" y1="86" x2="104" y2="104" stroke="#e2b54a" stroke-width="11" stroke-linecap="round"/>
+  <line x1="86" y1="86" x2="104" y2="104" stroke="url(#handle)" stroke-width="7.5" stroke-linecap="round"/>
+</svg>

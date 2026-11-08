@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show Yourself · Petite icône, variantes</title>
+<style>
+  body { margin:0; font:15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#f1f5f9; color:#0f172a; }
+  main { max-width:980px; margin:0 auto; padding:28px 18px 50px; }
+  h1 { font-size:24px; margin:0 0 4px; } .sub { color:#475569; margin:0 0 22px; }
+  .v { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px 18px; margin-bottom:16px; }
+  .v h2 { font-size:17px; margin:0 0 10px; }
+  .rows { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .bar { border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .light { background:#ffffff; border:1px solid #e2e8f0; } .dark { background:#202124; color:#e8eaed; }
+  .bar small { font-size:11px; opacity:.7; width:100%; }
+  canvas { image-rendering:pixelated; }
+  .zoom { display:flex; gap:10px; align-items:end; }
+  .lbl { font-size:11px; color:#64748b; text-align:center; }
+  .dark .lbl { color:#9aa0a6; }
+  .big { display:flex; align-items:center; gap:14px; margin-top:6px; color:#475569; }
+  @media (max-width:700px) { .rows { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Petite icône : 4 variantes</h1>
+  <p class="sub">Taille réelle (16, 32, 48 px), puis le 16 px agrandi ×6 pour voir chaque pixel. La barre claire et la barre sombre imitent la barre d'outils de Chrome. La grande icône du Store (128 px) ne change pas.</p>
+  <div id="list"></div>
+  <div class="v"><h2>Grande icône du Store (inchangée)</h2><div class="big" id="big"></div></div>
+</main>
+<script>
+const DATA = {"v": {"A_actuelle": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\">\n  <circle cx=\"16\" cy=\"16\" r=\"15.5\" fill=\"#0a2a1b\"/>\n  \n  <g fill=\"#e8be55\">\n    <polygon points=\"16,0.5 18.3,13 13.7,13\"/>\n    <polygon points=\"16,31.5 18.3,19 13.7,19\"/>\n    <polygon points=\"0.5,16 13,13.7 13,18.3\"/>\n    <polygon points=\"31.5,16 19,13.7 19,18.3\"/>\n  <\/g>\n  \n  <path d=\"M4 16 Q16 6 28 16 Q16 26 4 16 Z\" fill=\"#06180f\" stroke=\"#e8be55\" stroke-width=\"1.3\" stroke-linejoin=\"round\"/>\n  \n  <circle cx=\"15.5\" cy=\"15.5\" r=\"5.6\" fill=\"#2fd477\"/>\n  <circle cx=\"15.5\" cy=\"15.5\" r=\"2.4\" fill=\"#04140b\"/>\n  <circle cx=\"16.7\" cy=\"14.3\" r=\".9\" fill=\"#fff\"/>\n  <circle cx=\"15.5\" cy=\"15.5\" r=\"6.2\" fill=\"none\" stroke=\"#e8be55\" stroke-width=\"1.6\"/>\n  \n  <line x1=\"20.3\" y1=\"20.3\" x2=\"26\" y2=\"26\" stroke=\"#e8be55\" stroke-width=\"3.2\" stroke-linecap=\"round\"/>\n<\/svg>\n", "B_fine": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\">\n  <circle cx=\"16\" cy=\"16\" r=\"15.5\" fill=\"#0a2a1b\"/>\n  <circle cx=\"16\" cy=\"16\" r=\"15\" fill=\"none\" stroke=\"#e8be55\" stroke-width=\".8\" opacity=\".7\"/>\n  <g fill=\"#e8be55\"><polygon points=\"16,1.5 17,11 15,11\"/><polygon points=\"16,30.5 17,21 15,21\"/>\n  <polygon points=\"1.5,16 11,15 11,17\"/><polygon points=\"30.5,16 21,15 21,17\"/><\/g>\n  <path d=\"M5 16 Q16 7.5 27 16 Q16 24.5 5 16 Z\" fill=\"#06180f\" stroke=\"#e8be55\" stroke-width=\".9\"/>\n  <circle cx=\"15.5\" cy=\"15.5\" r=\"5\" fill=\"#2fd477\"/><circle cx=\"15.5\" cy=\"15.5\" r=\"2\" fill=\"#04140b\"/>\n  <circle cx=\"15.5\" cy=\"15.5\" r=\"5.6\" fill=\"none\" stroke=\"#e8be55\" stroke-width=\"1\"/>\n  <line x1=\"19.6\" y1=\"19.6\" x2=\"25\" y2=\"25\" stroke=\"#e8be55\" stroke-width=\"2\" stroke-linecap=\"round\"/><\/svg>", "C_epuree": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\">\n  <circle cx=\"16\" cy=\"16\" r=\"15.5\" fill=\"#0a2a1b\" stroke=\"#e8be55\" stroke-width=\"1\"/>\n  <path d=\"M4.5 16 Q16 7 27.5 16 Q16 25 4.5 16 Z\" fill=\"none\" stroke=\"#e8be55\" stroke-width=\"1.1\"/>\n  <circle cx=\"15.5\" cy=\"15.5\" r=\"5.2\" fill=\"#2fd477\"/><circle cx=\"15.5\" cy=\"15.5\" r=\"2.1\" fill=\"#04140b\"/>\n  <circle cx=\"16.5\" cy=\"14.5\" r=\".7\" fill=\"#fff\"/>\n  <line x1=\"19.7\" y1=\"19.7\" x2=\"25\" y2=\"25\" stroke=\"#e8be55\" stroke-width=\"2.2\" stroke-linecap=\"round\"/><\/svg>", "D_trait": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\">\n  <path d=\"M2.5 15 Q15 4 27.5 15 Q15 26 2.5 15 Z\" fill=\"none\" stroke=\"#e8be55\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>\n  <circle cx=\"15\" cy=\"15\" r=\"5.2\" fill=\"#2fd477\" stroke=\"#0a2a1b\" stroke-width=\"1\"/>\n  <circle cx=\"15\" cy=\"15\" r=\"2\" fill=\"#04140b\"/>\n  <line x1=\"19\" y1=\"19\" x2=\"28\" y2=\"28\" stroke=\"#2fd477\" stroke-width=\"2.8\" stroke-linecap=\"round\"/>\n  <line x1=\"19\" y1=\"19\" x2=\"28\" y2=\"28\" stroke=\"#0a2a1b\" stroke-width=\".8\" stroke-linecap=\"round\" opacity=\".5\"/><\/svg>"}, "n": {"A_actuelle": "A \u00b7 Actuelle", "B_fine": "B \u00b7 M\u00eame dessin, traits fins", "C_epuree": "C \u00b7 \u00c9pur\u00e9e (sans boussole)", "D_trait": "D \u00b7 Trait seul, sans fond"}, "big": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\">\n  <defs>\n    <linearGradient id=\"gold\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">\n      <stop offset=\"0\" stop-color=\"#fff1a8\"/>\n      <stop offset=\".45\" stop-color=\"#e2b54a\"/>\n      <stop offset=\"1\" stop-color=\"#9a6b1c\"/>\n    <\/linearGradient>\n    <linearGradient id=\"goldDark\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">\n      <stop offset=\"0\" stop-color=\"#c99a38\"/>\n      <stop offset=\"1\" stop-color=\"#6f4c12\"/>\n    <\/linearGradient>\n    <radialGradient id=\"bg\" cx=\".5\" cy=\".45\" r=\".6\">\n      <stop offset=\"0\" stop-color=\"#14402c\"/>\n      <stop offset=\"1\" stop-color=\"#06180f\"/>\n    <\/radialGradient>\n    <radialGradient id=\"iris\" cx=\".45\" cy=\".4\" r=\".65\">\n      <stop offset=\"0\" stop-color=\"#b8ffd2\"/>\n      <stop offset=\".35\" stop-color=\"#3ee07f\"/>\n      <stop offset=\".8\" stop-color=\"#11804a\"/>\n      <stop offset=\"1\" stop-color=\"#0a4a2b\"/>\n    <\/radialGradient>\n    <linearGradient id=\"band\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0\" stop-color=\"#2fae6c\"/>\n      <stop offset=\"1\" stop-color=\"#0d5a35\"/>\n    <\/linearGradient>\n    <linearGradient id=\"handle\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">\n      <stop offset=\"0\" stop-color=\"#0b4f2e\"/>\n      <stop offset=\".5\" stop-color=\"#2fc874\"/>\n      <stop offset=\"1\" stop-color=\"#0b4f2e\"/>\n    <\/linearGradient>\n  <\/defs>\n\n  <!-- Badge -->\n  <circle cx=\"64\" cy=\"64\" r=\"62\" fill=\"url(#bg)\"/>\n  <circle cx=\"64\" cy=\"64\" r=\"60\" fill=\"none\" stroke=\"url(#gold)\" stroke-width=\"2\"/>\n  <circle cx=\"64\" cy=\"64\" r=\"46\" fill=\"none\" stroke=\"#e2b54a\" stroke-opacity=\".35\" stroke-width=\"1\"/>\n\n  <!-- Compass rose: diagonal points (green) -->\n  <g transform=\"translate(64 64)\">\n    <g id=\"diag\">\n      <polygon points=\"0,-44 5,-6 0,0\" fill=\"#2fae6c\"/>\n      <polygon points=\"0,-44 -5,-6 0,0\" fill=\"#14683f\"/>\n    <\/g>\n    <use href=\"#diag\" transform=\"rotate(45)\"/>\n    <use href=\"#diag\" transform=\"rotate(135)\"/>\n    <use href=\"#diag\" transform=\"rotate(225)\"/>\n    <use href=\"#diag\" transform=\"rotate(315)\"/>\n    <!-- Cardinal points (gold) -->\n    <g id=\"card\">\n      <polygon points=\"0,-60 7,-8 0,0\" fill=\"url(#gold)\"/>\n      <polygon points=\"0,-60 -7,-8 0,0\" fill=\"url(#goldDark)\"/>\n    <\/g>\n    <use href=\"#card\" transform=\"rotate(90)\"/>\n    <use href=\"#card\" transform=\"rotate(180)\"/>\n    <use href=\"#card\" transform=\"rotate(270)\"/>\n  <\/g>\n\n  <!-- Eye almond -->\n  <path d=\"M16 64 Q64 24 112 64 Q64 104 16 64 Z\" fill=\"#06180f\" stroke=\"url(#gold)\" stroke-width=\"3\" stroke-linejoin=\"round\"/>\n  <path d=\"M24 64 Q64 33 104 64 Q64 95 24 64 Z\" fill=\"none\" stroke=\"url(#band)\" stroke-width=\"5\"/>\n\n  <!-- Magnifier lens = iris -->\n  <circle cx=\"62\" cy=\"62\" r=\"21\" fill=\"url(#iris)\"/>\n  <g stroke=\"#b8ffd2\" stroke-opacity=\".45\" stroke-width=\".8\" fill=\"none\">\n    <circle cx=\"62\" cy=\"62\" r=\"15\"/>\n    <path d=\"M62 47 L62 77 M47 62 L77 62 M51.4 51.4 L72.6 72.6 M72.6 51.4 L51.4 72.6\"/>\n  <\/g>\n  <circle cx=\"62\" cy=\"62\" r=\"8.5\" fill=\"#04140b\"/>\n  <circle cx=\"62\" cy=\"62\" r=\"8.5\" fill=\"none\" stroke=\"#1d7a48\" stroke-width=\"1.5\"/>\n  <circle cx=\"66\" cy=\"57.5\" r=\"3\" fill=\"#fff\"/>\n  <circle cx=\"58\" cy=\"66\" r=\"1.4\" fill=\"#fff\" fill-opacity=\".85\"/>\n  <circle cx=\"62\" cy=\"62\" r=\"23\" fill=\"none\" stroke=\"url(#gold)\" stroke-width=\"5\"/>\n\n  <!-- Handle coming out of the eye -->\n  <line x1=\"79\" y1=\"79\" x2=\"85\" y2=\"85\" stroke=\"url(#gold)\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n  <line x1=\"86\" y1=\"86\" x2=\"104\" y2=\"104\" stroke=\"#e2b54a\" stroke-width=\"11\" stroke-linecap=\"round\"/>\n  <line x1=\"86\" y1=\"86\" x2=\"104\" y2=\"104\" stroke=\"url(#handle)\" stroke-width=\"7.5\" stroke-linecap=\"round\"/>\n<\/svg>\n"};
+const list = document.getElementById('list');
+function render(svg, size, zoom, cb) {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = size; c.height = size;
+    c.getContext('2d').drawImage(img, 0, 0, size, size);
+    if (zoom > 1) { c.style.width = c.style.height = (size * zoom) + 'px'; }
+    cb(c);
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+Object.keys(DATA.v).forEach((k) => {
+  const box = document.createElement('div'); box.className = 'v';
+  box.innerHTML = '<h2>' + DATA.n[k] + '</h2><div class="rows"></div>';
+  const rows = box.querySelector('.rows');
+  ['light', 'dark'].forEach((theme) => {
+    const bar = document.createElement('div'); bar.className = 'bar ' + theme;
+    const zoom = document.createElement('div'); zoom.className = 'zoom';
+    [16, 32, 48].forEach((s) => render(DATA.v[k], s, 1, (c) => { const w = document.createElement('div'); w.appendChild(c); w.insertAdjacentHTML('beforeend', '<div class="lbl">' + s + '</div>'); zoom.appendChild(w); }));
+    render(DATA.v[k], 16, 6, (c) => { const w = document.createElement('div'); w.style.marginLeft = '12px'; w.appendChild(c); w.insertAdjacentHTML('beforeend', '<div class="lbl">16 px ×6</div>'); setTimeout(() => zoom.appendChild(w), 30); });
+    bar.appendChild(zoom);
+    rows.appendChild(bar);
+  });
+  list.appendChild(box);
+});
+render(DATA.big, 128, 1, (c) => { document.getElementById('big').appendChild(c); document.getElementById('big').insertAdjacentHTML('beforeend', '<span>128 px, telle qu\'elle apparaîtra sur le Store</span>'); });
+</script>
+</body>
+</html>

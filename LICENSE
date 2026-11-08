@@ -1,0 +1,31 @@
+Show Yourself
+Copyright (c) 2026 Bashouk Labs. All rights reserved.
+
+The source code is published so anyone can check what the extension does
+(security and privacy audit). Publication does not grant any license.
+
+You MAY:
+- read and review the source code;
+- install and use the extension as distributed by Bashouk Labs
+  (Chrome Web Store) for personal or professional use;
+- report bugs, security issues and suggestions (GitHub issues).
+
+You MAY NOT, without prior written permission from Bashouk Labs:
+- copy, modify, translate or create derivative works of the code,
+  icons, texts or screenshots;
+- redistribute or publish the extension or any part of it, including
+  on any extension store, under this name or any other;
+- use the name "Show Yourself" or its logo.
+
+By submitting a contribution (issue or pull request), you agree that
+Bashouk Labs may use it freely in the extension, without obligation.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL BASHOUK LABS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+Contact: contact@bashouk.com
+
+Third-party components keep their own licenses:
+- lib/jsQR.js: Apache License 2.0 (see lib/jsQR-LICENSE.txt)
+- fonts/AtkinsonHyperlegibleMono.ttf: SIL Open Font License 1.1 (see fonts/OFL.txt)

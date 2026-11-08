@@ -1,0 +1,33 @@
+# --- Secrets: NEVER commit -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crx
+*.p12
+secrets/
+credentials*.json
+
+# --- AI assistants / editors (local config, may hold personal paths) ------
+.claude/
+CLAUDE.local.md
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Build output (rebuilt from sources) -----------------------------------
+*.zip
+dist/
+build/
+
+# --- Dependencies / caches --------------------------------------------------
+node_modules/
+__pycache__/
+*.log
+npm-debug.log*
+
+# --- OS junk ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Show Yourself</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <img src="icons/icon-128.png" alt="" width="40" height="40" />
+    <div>
+      <div class="name">Show Yourself</div>
+      <div class="tagline" data-i18n="p.tagline"></div>
+    </div>
+  </header>
+
+  <section class="card master">
+    <label class="toggle">
+      <span>
+        <strong data-i18n="p.enabled"></strong>
+        <small id="enabledHelp"></small>
+      </span>
+      <input type="checkbox" id="enabled" checked />
+      <i aria-hidden="true"></i>
+    </label>
+  </section>
+
+  <div id="settingsBody">
+  <section class="stats">
+    <div class="stat danger"><span id="spotted">0</span><small data-i18n="p.spotted"></small></div>
+    <div class="stat"><span id="blocked">0</span><small data-i18n="p.blocked"></small></div>
+    <div class="period" data-i18n="p.week"></div>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="p.bubble"></h2>
+    <div class="seg" role="radiogroup">
+      <label><input type="radio" name="bubble" value="all" /><span data-i18n="p.bubbleAll"></span></label>
+      <label><input type="radio" name="bubble" value="risky" /><span data-i18n="p.bubbleRisky"></span></label>
+      <label><input type="radio" name="bubble" value="off" /><span data-i18n="p.bubbleOff"></span></label>
+    </div>
+    <p class="muted" id="bubbleHelp"></p>
+  </section>
+
+  <section class="card">
+    <label class="toggle">
+      <span>
+        <strong data-i18n="p.blockToggle"></strong>
+        <small data-i18n="p.blockHelp"></small>
+      </span>
+      <input type="checkbox" id="blockClicks" checked />
+      <i aria-hidden="true"></i>
+    </label>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="p.trusted"></h2>
+    <form id="addForm" class="add">
+      <input id="addInput" type="text" autocomplete="off" spellcheck="false" data-i18n-placeholder="p.addPlaceholder" />
+      <button type="submit" data-i18n="p.add"></button>
+    </form>
+    <button type="button" id="addCurrent" class="link" hidden></button>
+    <p id="addMsg" class="muted" hidden></p>
+    <input id="trustedSearch" class="search" type="search" autocomplete="off" spellcheck="false" hidden />
+    <ul id="trusted" class="chips"></ul>
+    <button type="button" id="trustedMore" class="link more" hidden></button>
+    <p id="trustedEmpty" class="muted" data-i18n="p.trustedEmpty"></p>
+  </section>
+
+  </div>
+
+  <footer>
+    <a href="welcome.html" target="_blank" data-i18n="p.welcome"></a>
+    <div class="muted" data-i18n="p.privacy"></div>
+  </footer>
+
+  <script src="features.js"></script>
+  <script src="i18n.js"></script>
+  <script src="files.js"></script>
+  <script src="analyzer.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

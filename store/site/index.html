@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show Yourself · See who's really behind a link</title>
+<meta name="description" content="Free Chrome extension: reveals where links really go, who really sent an email, and disguised files. 100% local.">
+<link rel="icon" href="img/icon.png">
+<meta property="og:title" content="Show Yourself">
+<meta property="og:description" content="See who's really behind a link, a sender or a file, before you click.">
+<meta property="og:image" content="img/en-2-link.png">
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font:17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color:#e2e8f0; background:#0b1220; }
+  a { color:#60a5fa; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 22px; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:18px 0; }
+  nav .brand { display:flex; align-items:center; gap:10px; font-weight:700; color:#fff; text-decoration:none; }
+  .lang button { border:1px solid #1e293b; background:#111a2e; color:#e2e8f0; padding:6px 12px; border-radius:8px; cursor:pointer; font:inherit; font-size:14px; }
+  .lang button[aria-pressed="true"] { background:#2563eb; border-color:#2563eb; color:#fff; }
+  .hero { text-align:center; padding:50px 0 30px; background:radial-gradient(ellipse at top, #1e3a5f 0%, transparent 70%); }
+  .hero img { width:110px; height:110px; }
+  h1 { font-size:46px; line-height:1.15; margin:18px 0 12px; color:#fff; }
+  .hero p { font-size:20px; color:#cbd5e1; max-width:680px; margin:0 auto 28px; }
+  .cta { display:inline-block; background:#16a34a; color:#fff; font-weight:700; padding:14px 28px; border-radius:12px; text-decoration:none; font-size:18px; }
+  .cta:hover { background:#15803d; } .small { font-size:14px; color:#94a3b8; margin-top:10px; }
+  section { padding:40px 0; }
+  h2 { font-size:30px; color:#fff; text-align:center; margin:0 0 8px; }
+  .lead { text-align:center; color:#94a3b8; max-width:700px; margin:0 auto 30px; }
+  .story { display:grid; gap:34px; }
+  .story figure { margin:0; } .story img { width:100%; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,.5); display:block; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+  .card { background:#111a2e; border:1px solid #1e293b; border-radius:14px; padding:20px; }
+  .card h3 { margin:0 0 6px; color:#fff; font-size:18px; } .card p { margin:0; color:#94a3b8; font-size:15px; }
+  .priv { background:#0f2a1c; border:1px solid #14532d; border-radius:14px; padding:24px; text-align:center; }
+  footer { border-top:1px solid #1e293b; padding:24px 0 40px; text-align:center; color:#94a3b8; font-size:14px; }
+  [hidden] { display:none !important; }
+  @media (max-width:600px) { h1 { font-size:34px; } }
+</style>
+</head>
+<body>
+<!--
+  Both languages are written in the page (readable without JavaScript).
+  TODO before launch: replace STORE_URL with the Chrome Web Store address.
+-->
+<div class="wrap">
+  <nav><a class="brand" href="./"><img src="img/icon.png" width="32" height="32" alt="">Show Yourself</a>
+    <div class="lang"><button data-l="en">EN</button> <button data-l="fr">FR</button></div></nav>
+</div>
+
+<div data-lang="en">
+  <header class="hero"><div class="wrap">
+    <img src="img/icon.png" alt="Show Yourself icon">
+    <h1>Scams don't hack your computer.<br>They hack what you see.</h1>
+    <p>Show Yourself reveals where a link really goes, who really sent an email, and what a file really is. Before you click.</p>
+    <a class="cta" href="STORE_URL">Add to Chrome, it's free</a>
+    <div class="small">No account · No server · 100% local</div>
+  </div></header>
+  <section><div class="wrap">
+    <h2>One email, three traps</h2>
+    <p class="lead">Everything looks right. That is the whole trick. Show Yourself doesn't judge sites: it shows you the facts, so you decide.</p>
+    <div class="story">
+      <figure><img src="img/en-1-story.png" alt="A realistic phishing email about a parcel on hold" loading="lazy"></figure>
+      <figure><img src="img/en-2-link.png" alt="Hovering the button reveals a Cyrillic letter in the address" loading="lazy"></figure>
+      <figure><img src="img/en-3-sender.png" alt="The sender's display name imitates an official address" loading="lazy"></figure>
+      <figure><img src="img/en-4-file.png" alt="An invoice.pdf that is really an .exe program" loading="lazy"></figure>
+    </div>
+  </div></section>
+  <section><div class="wrap"><div class="cards">
+    <div class="card"><h3>🔗 Links</h3><p>The real destination, letter by letter. Look-alike letters and hidden redirects revealed.</p></div>
+    <div class="card"><h3>✉️ Senders</h3><p>Hover a name to see the full address behind it.</p></div>
+    <div class="card"><h3>📎 Disguised files</h3><p>"invoice.pdf.exe" and flipped names unmasked. Suspicious downloads paused.</p></div>
+    <div class="card"><h3>▦ QR codes</h3><p>Right-click an image to reveal the link hidden in a QR code.</p></div>
+  </div></div></section>
+  <section><div class="wrap"><div class="priv">
+    <h2>Your browsing stays yours</h2>
+    <p>Everything is analyzed on your computer. Nothing is collected, stored or sent. <a href="privacy/?lang=en">Privacy policy</a></p>
+  </div></div></section>
+  <footer>Made by Bashouk Labs · <a href="mailto:contact@bashouk.com">contact@bashouk.com</a> · <a href="privacy/?lang=en">Privacy</a></footer>
+</div>
+
+<div data-lang="fr" hidden>
+  <header class="hero"><div class="wrap">
+    <img src="img/icon.png" alt="Icône Show Yourself">
+    <h1>Les arnaques ne piratent pas votre ordinateur.<br>Elles piratent ce que vous voyez.</h1>
+    <p>Show Yourself révèle où mène vraiment un lien, qui a vraiment envoyé un e-mail, et ce qu'est vraiment un fichier. Avant le clic.</p>
+    <a class="cta" href="STORE_URL">Ajouter à Chrome, c'est gratuit</a>
+    <div class="small">Pas de compte · Pas de serveur · 100 % local</div>
+  </div></header>
+  <section><div class="wrap">
+    <h2>Un e-mail, trois pièges</h2>
+    <p class="lead">Tout a l'air normal, et c'est justement le piège. Show Yourself ne juge pas les sites : il vous montre les faits, vous décidez.</p>
+    <div class="story">
+      <figure><img src="img/fr-1-story.png" alt="Un faux e-mail réaliste à propos d'un colis bloqué" loading="lazy"></figure>
+      <figure><img src="img/fr-2-link.png" alt="Le survol du bouton révèle une lettre cyrillique dans l'adresse" loading="lazy"></figure>
+      <figure><img src="img/fr-3-sender.png" alt="Le nom de l'expéditeur imite une adresse officielle" loading="lazy"></figure>
+      <figure><img src="img/fr-4-file.png" alt="Une facture.pdf qui est en réalité un programme .exe" loading="lazy"></figure>
+    </div>
+  </div></section>
+  <section><div class="wrap"><div class="cards">
+    <div class="card"><h3>🔗 Liens</h3><p>La vraie destination, lettre par lettre. Lettres imitées et redirections cachées révélées.</p></div>
+    <div class="card"><h3>✉️ Expéditeurs</h3><p>Survolez un nom pour voir l'adresse complète derrière.</p></div>
+    <div class="card"><h3>📎 Fichiers déguisés</h3><p>« facture.pdf.exe » et noms retournés démasqués. Téléchargements suspects mis en pause.</p></div>
+    <div class="card"><h3>▦ QR codes</h3><p>Clic droit sur une image pour révéler le lien caché dans un QR code.</p></div>
+  </div></div></section>
+  <section><div class="wrap"><div class="priv">
+    <h2>Votre navigation reste à vous</h2>
+    <p>Tout est analysé sur votre ordinateur. Rien n'est collecté, enregistré ni envoyé. <a href="privacy/?lang=fr">Politique de confidentialité</a></p>
+  </div></div></section>
+  <footer>Par Bashouk Labs · <a href="mailto:contact@bashouk.com">contact@bashouk.com</a> · <a href="privacy/?lang=fr">Confidentialité</a></footer>
+</div>
+
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search).get('lang');
+    var start = q || ((navigator.language || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en');
+    function set(l) {
+      document.querySelectorAll('[data-lang]').forEach(function (s) { s.hidden = s.dataset.lang !== l; });
+      document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.l === l)); });
+      document.documentElement.lang = l;
+    }
+    document.querySelectorAll('.lang button').forEach(function (b) { b.onclick = function () { set(b.dataset.l); }; });
+    set(start);
+  })();
+</script>
+</body>
+</html>

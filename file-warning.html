@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Show Yourself</title>
+  <link rel="stylesheet" href="file-warning.css" />
+</head>
+<body>
+  <main class="card">
+    <div class="badge" data-i18n="badge"></div>
+    <h1 data-i18n="title"></h1>
+
+    <div class="row">
+      <div class="label" data-i18n="looks"></div>
+      <div id="looks" class="name looks" dir="auto"></div>
+    </div>
+    <div class="row">
+      <div class="label" data-i18n="really"></div>
+      <div id="really" class="name really" dir="ltr"></div>
+    </div>
+    <div id="kind" class="kind"></div>
+
+    <ul id="why" class="why"></ul>
+
+    <div class="actions">
+      <button id="del" class="safe" data-i18n="del"></button>
+      <button id="keep" class="risk" data-i18n="keep"></button>
+    </div>
+    <p id="status" class="status"></p>
+    <p class="foot" data-i18n="foot"></p>
+  </main>
+  <script src="i18n.js"></script>
+  <script src="files.js"></script>
+  <script src="file-warning.js"></script>
+</body>
+</html>

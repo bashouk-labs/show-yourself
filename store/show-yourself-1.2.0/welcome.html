@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="show-yourself-demo" content="1" />
+  <title>Show Yourself</title>
+  <link rel="stylesheet" href="welcome.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon-128.png" alt="" width="112" height="112" />
+      <h1 data-i18n="w.title"></h1>
+      <p class="lead" data-i18n="w.lead"></p>
+    </header>
+
+    <ol class="steps">
+      <li><b>1</b><h3 data-i18n="w.s1"></h3><p data-i18n="w.s1d"></p></li>
+      <li><b>2</b><h3 data-i18n="w.s2"></h3><p data-i18n="w.s2d"></p></li>
+      <li><b>3</b><h3 data-i18n="w.s3"></h3><p data-i18n="w.s3d"></p></li>
+      <li><b>4</b><h3 data-i18n="w.s4"></h3><p data-i18n="w.s4d"></p></li>
+    </ol>
+
+    <h2 data-i18n="w.try"></h2>
+    <div class="demos">
+      <div class="demo trap">
+        <a href="https://login.rnicr0soft.com/oauth2/authorize" data-i18n="w.d1"></a>
+        <p data-i18n="w.d1h"></p>
+      </div>
+      <div class="demo trap">
+        <a href="https://xn--80ak6aa92e.com/id/manage" data-i18n="w.d2"></a>
+        <p data-i18n="w.d2h"></p>
+      </div>
+      <div class="demo trap">
+        <a href="http://paypal.com.securite-client.pirate.fr/login" data-i18n="w.d3"></a>
+        <p data-i18n="w.d3h"></p>
+      </div>
+      <div class="demo legit">
+        <a href="https://www.paypal.com/signin" data-i18n="w.d4"></a>
+        <p data-i18n="w.d4h"></p>
+      </div>
+    </div>
+
+    <p class="tip" data-i18n="w.pin"></p>
+    <p class="privacy" data-i18n="w.privacy"></p>
+  </main>
+
+  <script src="features.js"></script>
+  <script src="i18n.js"></script>
+  <script src="welcome.js"></script>
+  <!-- Content scripts don't run on extension pages: load the magnifier here -->
+  <script src="files.js"></script>
+  <script src="analyzer.js"></script>
+  <script src="content.js"></script>
+</body>
+</html>

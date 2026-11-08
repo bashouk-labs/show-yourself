@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show Yourself · Privacy Policy · Bashouk Labs</title>
+<meta name="description" content="Privacy policy of the Show Yourself browser extension by Bashouk Labs. No data is collected.">
+<style>
+  :root { color-scheme: light dark; --bg:#f8fafc; --card:#fff; --fg:#0f172a; --mut:#475569; --line:#e2e8f0; --acc:#2563eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1220; --card:#111a2e; --fg:#e2e8f0; --mut:#94a3b8; --line:#1e293b; --acc:#60a5fa; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:40px 20px 60px; }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:28px; margin:0; } h2 { font-size:19px; margin:28px 0 8px; }
+  .date { color:var(--mut); font-size:14px; margin:6px 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 26px 20px; }
+  .lead { font-size:18px; padding:14px 16px; border-left:4px solid #16a34a; background:rgba(22,163,74,.08); border-radius:8px; margin-top:20px; }
+  code { font-size:14px; background:rgba(100,116,139,.15); padding:1px 5px; border-radius:5px; }
+  li { margin:6px 0; } a { color:var(--acc); }
+  .lang button { border:1px solid var(--line); background:var(--card); color:var(--fg); padding:6px 12px; border-radius:8px; cursor:pointer; font:inherit; font-size:14px; }
+  .lang button[aria-pressed="true"] { background:var(--acc); color:#fff; border-color:var(--acc); }
+  footer { color:var(--mut); font-size:14px; margin-top:28px; text-align:center; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Show Yourself</h1>
+    <div class="lang"><button data-l="en">English</button> <button data-l="fr">Français</button></div>
+  </header>
+
+  <section lang="en" data-lang="en">
+    <p class="date">Privacy Policy, last updated 2026-11-06</p>
+    <div class="card">
+      <p class="lead"><strong>No data is collected, sold or shared.</strong> Everything is analyzed on your computer.</p>
+      <h2>What happens to your data</h2>
+      <ul>
+        <li>The extension never sends your data anywhere. Its only network request is the one described under <code>contextMenus</code> below, and it happens only when you ask for it.</li>
+        <li>Links you hover or click are analyzed in memory and immediately forgotten. Their addresses are never stored or transmitted.</li>
+        <li>The extension stores only the following, locally on your device (<code>chrome.storage.local</code>), and never sends it anywhere:
+          <ul>
+            <li>your settings (for example, “block clicks on traps”: on/off);</li>
+            <li>the list of sites you marked as “I know this site”;</li>
+            <li>an anonymous daily counter (number of traps spotted and clicks blocked, with no addresses), kept for 30 days.</li>
+          </ul>
+        </li>
+        <li>Uninstalling the extension deletes all of this data.</li>
+      </ul>
+      <h2>Permissions</h2>
+      <ul>
+        <li><code>storage</code>: saves the settings, trusted sites and counter listed above.</li>
+        <li><strong>Access to all websites</strong> (content script): needed to inspect the links, e-mail senders and attachment names on every page you visit, including webmail. Nothing is read or sent beyond those.</li>
+        <li><code>scripting</code>: adds the inspector to tabs that were already open when the extension is installed or updated, so you don’t have to reload them.</li>
+        <li><code>downloads</code>: checks the <strong>name</strong> of each file you download; a disguised file (e.g. invoice.pdf.exe) is paused and you choose to delete or keep it. File contents are never read.</li>
+        <li><code>contextMenus</code>: adds “reveal the QR code’s link” to the right-click menu on images. The image is decoded on your computer (bundled jsQR library); nothing is uploaded. If the page does not let the extension read the image directly, the extension downloads that image again from its public address, without your cookies, to decode it. Local and private-network addresses are never contacted.</li>
+      </ul>
+      <h2>No third parties</h2>
+      <p>No analytics, no advertising, no tracking, no account. The extension contains no remote code: everything it runs is in the package.</p>
+      <h2>Your rights (GDPR)</h2>
+      <p>Since no personal data reaches us, there is nothing for us to access, correct or delete. Everything stays on your device; uninstalling the extension erases it.</p>
+      <h2>Children</h2>
+      <p>The extension collects no data from anyone, including children.</p>
+      <h2>Changes</h2>
+      <p>Any change to this policy will be published on this page with a new date. If the extension ever needed to send data, it would ask you first.</p>
+      <h2>Contact</h2>
+      <p>Bashouk Labs · contact@bashouk.com</p>
+    </div>
+  </section>
+
+  <section lang="fr" data-lang="fr" hidden>
+    <p class="date">Politique de confidentialité, dernière mise à jour le 6 novembre 2026</p>
+    <div class="card">
+      <p class="lead"><strong>Aucune donnée n’est collectée, vendue ni partagée.</strong> Tout est analysé sur votre ordinateur.</p>
+      <h2>Ce qui arrive à vos données</h2>
+      <ul>
+        <li>L’extension n’envoie jamais vos données nulle part. Sa seule requête réseau est celle décrite à <code>contextMenus</code> ci-dessous, et seulement quand vous la demandez.</li>
+        <li>Les liens survolés ou cliqués sont analysés en mémoire puis immédiatement oubliés. Leurs adresses ne sont jamais enregistrées ni transmises.</li>
+        <li>L’extension enregistre uniquement les éléments suivants, localement sur votre appareil (<code>chrome.storage.local</code>), et ne les envoie jamais nulle part :
+          <ul>
+            <li>vos réglages (par exemple « bloquer le clic sur les pièges » : activé ou non) ;</li>
+            <li>la liste des sites que vous avez marqués « Je connais ce site » ;</li>
+            <li>un compteur quotidien anonyme (nombre de pièges repérés et de clics bloqués, sans aucune adresse), conservé 30 jours.</li>
+          </ul>
+        </li>
+        <li>Désinstaller l’extension supprime toutes ces données.</li>
+      </ul>
+      <h2>Permissions</h2>
+      <ul>
+        <li><code>storage</code> : enregistre les réglages, les sites de confiance et le compteur ci-dessus.</li>
+        <li><strong>Accès à tous les sites</strong> (script de contenu) : nécessaire pour inspecter les liens, les expéditeurs et les noms des pièces jointes de chaque page, y compris dans les webmails. Rien d’autre n’est lu ni envoyé.</li>
+        <li><code>scripting</code> : ajoute l’inspecteur aux onglets déjà ouverts lors de l’installation ou d’une mise à jour, pour ne pas avoir à les recharger.</li>
+        <li><code>downloads</code> : vérifie le <strong>nom</strong> de chaque fichier téléchargé ; un fichier déguisé (ex. facture.pdf.exe) est mis en pause et vous choisissez de le supprimer ou de le garder. Le contenu des fichiers n’est jamais lu.</li>
+        <li><code>contextMenus</code> : ajoute « révéler le lien du QR code » au clic droit sur une image. L’image est décodée sur votre ordinateur (bibliothèque jsQR incluse) ; rien n’est envoyé. Si la page ne permet pas à l’extension de lire l’image directement, l’extension retélécharge cette image depuis son adresse publique, sans vos cookies, pour la décoder. Les adresses locales ou de réseau privé ne sont jamais contactées.</li>
+      </ul>
+      <h2>Aucun tiers</h2>
+      <p>Pas de statistiques, pas de publicité, pas de pistage, pas de compte. L’extension ne contient aucun code distant : tout ce qu’elle exécute est dans le paquet.</p>
+      <h2>Vos droits (RGPD)</h2>
+      <p>Aucune donnée personnelle ne nous parvient : il n’y a donc rien à consulter, corriger ou supprimer chez nous. Tout reste sur votre appareil ; désinstaller l’extension l’efface.</p>
+      <h2>Enfants</h2>
+      <p>L’extension ne collecte aucune donnée, sur personne, enfants compris.</p>
+      <h2>Modifications</h2>
+      <p>Tout changement de cette politique sera publié sur cette page avec une nouvelle date. Si l’extension devait un jour envoyer des données, elle vous le demanderait d’abord.</p>
+      <h2>Contact</h2>
+      <p>Bashouk Labs · contact@bashouk.com</p>
+    </div>
+  </section>
+
+  <footer>© 2026 Bashouk Labs · <a href="https://bashouk.com">bashouk.com</a></footer>
+</main>
+<script>
+  // Both languages are in the HTML (readable by Google's reviewers without JS);
+  // this only picks the visitor's language: French if the browser is French, else English.
+  (function () {
+    var q = new URLSearchParams(location.search).get('lang');
+    var start = q || ((navigator.language || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en');
+    function set(l) {
+      document.querySelectorAll('[data-lang]').forEach(function (s) { s.hidden = s.dataset.lang !== l; });
+      document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.l === l)); });
+      document.documentElement.lang = l;
+    }
+    document.querySelectorAll('.lang button').forEach(function (b) { b.onclick = function () { set(b.dataset.l); }; });
+    set(start);
+  })();
+</script>
+</body>
+</html>

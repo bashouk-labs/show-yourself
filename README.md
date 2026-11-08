@@ -42,7 +42,7 @@ No trap found: the extension shows the facts and lets you decide. One click adds
 
 ![Look-alike in a QR code](docs/qr-lookalike.png)
 
-<img src="docs/popup.png" alt="Settings popup" width="280" align="right">
+<img src="docs/popup.png" alt="Settings popup" width="340" align="right">
 
 ### The popup
 

@@ -66,23 +66,28 @@
 </head>
 <body>
   <div class="container">
-    <h1>🔍 Show Yourself · Banc d'essai</h1>
-    <p class="subtitle">Survolez un lien (ou naviguez avec <code>Tab</code>) pour voir la loupe. Aucun lien n'est cliquable sur cette page.</p>
+    <h1 data-en="🔍 Show Yourself · Test bench">🔍 Show Yourself · Banc d'essai</h1>
+    <p class="subtitle" data-en="Hover a link (or use &lt;code&gt;Tab&lt;/code&gt;) to see the magnifier. No link on this page can be clicked.">Survolez un lien (ou naviguez avec <code>Tab</code>) pour voir la loupe. Aucun lien n'est cliquable sur cette page.</p>
 
-    <h2>🚨 Pièges : doivent alerter</h2>
-    <p class="section-intro">Le texte de chaque lien imite ce qu'un vrai message de phishing afficherait.</p>
+    <h2 data-en="🚨 Traps: must warn">🚨 Pièges : doivent alerter</h2>
+    <p class="section-intro" data-en="Each link's text imitates what a real phishing message would show.">Le texte de chaque lien imite ce qu'un vrai message de phishing afficherait.</p>
     <div class="grid" id="traps"></div>
 
-    <h2>✅ Sites légitimes : ne doivent PAS alerter</h2>
-    <p class="section-intro">Si l'un d'eux passe en orange ou en rouge, c'est un bug (fausse alerte) : merci de le signaler !</p>
+    <h2 data-en="✅ Real sites: must NOT warn">✅ Sites légitimes : ne doivent PAS alerter</h2>
+    <p class="section-intro" data-en="If one of them turns orange or red, it is a bug (false alarm): please report it!">Si l'un d'eux passe en orange ou en rouge, c'est un bug (fausse alerte) : merci de le signaler !</p>
     <div class="grid" id="legit"></div>
 
-    <div class="notice">
+    <div class="notice" id="noticeFr">
       💡 <strong>Pour tester avec l'extension installée :</strong> dans <code>chrome://extensions</code>, ouvrez « Détails »
       de <em>Show Yourself</em> et activez <strong>« Autoriser l'accès aux URL de fichier »</strong>.
       Sinon, cette page charge automatiquement une copie locale du script pour que vous puissiez tester tout de suite.
-      <div id="mode" style="margin-top:8px;font-weight:700"></div>
     </div>
+    <div class="notice" id="noticeEn" hidden>
+      💡 <strong>To test with the extension installed:</strong> in <code>chrome://extensions</code>, open "Details"
+      for <em>Show Yourself</em> and turn on <strong>"Allow access to file URLs"</strong>.
+      Otherwise this page loads a local copy of the script so you can test right away.
+    </div>
+    <div id="mode" style="margin-top:8px;font-weight:700"></div>
   </div>
 
   <script>
@@ -129,7 +134,51 @@
       ['GitHub Docs', 'Lien de référence propre.', 'https://docs.github.com/fr/authentication', 'Documentation GitHub (docs.github.com)', 'none']
     ];
 
-    const EXPECT_TEXT = { danger: '🚨 Attendu : Piège probable', caution: '⚠️ Attendu : À vérifier', none: 'Attendu : Aucun piège détecté' };
+    // English texts, same order as above: [title, explanation, link text]
+    const TRAPS_EN = [
+      ['"rn" instead of "m"', 'r + n side by side look like an m. A 0 replaces the o.', 'Sign in to Microsoft 365 (login.microsoft.com)'],
+      ['Capital "I" instead of "l"', 'The browser reads "paypai.com": a fake PayPal.', 'Verify my PayPal account'],
+      ['Fake start of address', 'The real site is pirate.fr, the rest is decoration. And plain http.', 'PayPal secure area'],
+      ['Cyrillic alphabet (Punycode)', '"аррӏе" is written with Cyrillic letters.', 'Manage my Apple ID'],
+      ['One foreign letter', 'The "а" in pаypal is Cyrillic, the rest is Latin.', 'PayPal · Sign in'],
+      ['The link text lies', 'The text shows paypal.com, the link goes elsewhere.', 'https://www.paypal.com/signin'],
+      ['"@" trap', 'Everything before "@" is ignored: you land on evil-site.com.', 'Your Ameli refund'],
+      ['Hidden Outlook redirect', 'Outlook SafeLinks wraps the real link. We unwrap it.', 'View my file'],
+      ['Free hosting', 'Anyone can create a site on .github.io.', 'PayPal sign in'],
+      ['Visual typo', '"steamcommunlty": an l instead of an i.', 'Accept the Steam trade'],
+      ['Short link', 'The destination is hidden behind bit.ly.', 'Track my parcel'],
+      ['Raw IP address', 'Real sites do not send you to an address made of numbers.', 'Go to my account']
+    ];
+    const LEGIT_EN = [
+      ['The real PayPal', 'Contains an "l", must not warn.', 'My PayPal account (paypal.com)'],
+      ['The real Google', 'Normal subdomain.', 'Google sign in'],
+      ['Microsoft Learn', 'Contains "rn" (learn): must not warn.', 'Microsoft documentation'],
+      ['Outlook', 'outlook.live.com really belongs to Microsoft.', 'Open outlook.com'],
+      ['French Wikipedia', '"fr." at the start is not a trap.', 'Hameçonnage · Wikipédia'],
+      ['French tax office', 'Official government site.', 'My personal space'],
+      ['Amazon UK', 'Two-part extension (.co.uk).', 'Amazon cart'],
+      ['Yahoo Finance', '"finance" looks like "binance" but is not a trap.', 'Yahoo Finance'],
+      ['German accented domain', 'Legitimate accents: information only.', 'City of Munich'],
+      ['Russian domain', 'Legitimate Cyrillic alphabet: information only.', 'россия.рф'],
+      ['Facebook redirect to a real site', 'Unwrapped, it leads to Le Monde.', 'lemonde.fr'],
+      ['GitHub Docs', 'Clean reference link.', 'GitHub documentation (docs.github.com)']
+    ];
+    const qLang = new URLSearchParams(location.search).get('lang');
+    const EN = qLang ? qLang === 'en' : !/^fr/i.test(navigator.language || '');
+    if (EN) {
+      document.documentElement.lang = 'en';
+      document.title = 'Show Yourself · Test bench';
+      document.querySelectorAll('[data-en]').forEach((n) => { n.innerHTML = n.getAttribute('data-en'); });
+      document.getElementById('noticeFr').hidden = true;
+      document.getElementById('noticeEn').hidden = false;
+      const swap = (list, en) => list.forEach((c, i) => { c[0] = en[i][0]; c[1] = en[i][1]; c[3] = en[i][2]; });
+      swap(TRAPS, TRAPS_EN);
+      swap(LEGIT, LEGIT_EN);
+    }
+
+    const EXPECT_TEXT = EN
+      ? { danger: '🚨 Expected: Likely trap', caution: '⚠️ Expected: Check it', none: 'Expected: No trap found' }
+      : { danger: '🚨 Attendu : Piège probable', caution: '⚠️ Attendu : À vérifier', none: 'Attendu : Aucun piège détecté' };
 
     function addCards(containerId, cases, kind) {
       const container = document.getElementById(containerId);
@@ -160,10 +209,10 @@
       setTimeout(() => {
         const mode = document.getElementById('mode');
         if (document.documentElement.getAttribute('data-show-yourself-extension') === 'active') {
-          mode.textContent = '✅ Mode : extension installée.';
+          mode.textContent = EN ? '✅ Mode: extension installed.' : '✅ Mode : extension installée.';
           return;
         }
-        mode.textContent = '🧪 Mode : copie locale (extension non détectée sur cette page).';
+        mode.textContent = EN ? '🧪 Mode: local copy (extension not detected on this page).' : '🧪 Mode : copie locale (extension non détectée sur cette page).';
         const s0 = document.createElement('script');
         s0.src = './i18n.js';
         const s1 = document.createElement('script');

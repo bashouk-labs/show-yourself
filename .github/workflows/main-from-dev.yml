@@ -1,0 +1,23 @@
+name: main-from-dev
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  only-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull requests to main must come from dev
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "dev" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "Pull requests to main must come from the dev branch of this repository. Please target dev instead."
+            exit 1
+          fi
+          echo "OK: from dev"

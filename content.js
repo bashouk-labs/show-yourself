@@ -55,7 +55,7 @@
   }
 
   // --- CONFIGURATION ---
-  const DEBOUNCE_MS = 150;
+  const SPEED_MS = { fast: 150, normal: 400, slow: 650 }; // hover time before the bubble opens
   const HIDE_DELAY_MS = 260;     // time to travel from the link to the bubble
   const VIEWPORT_MARGIN = 8;
   const GAP = 8;
@@ -91,8 +91,10 @@
   const storage = (() => {
     try { return chrome.storage && chrome.storage.local ? chrome.storage.local : null; } catch (e) { return null; }
   })();
-  /** bubble: 'all' | 'risky' | 'off' */
-  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'all' };
+  /** bubble: 'all' | 'risky' | 'off'; speed: 'fast' | 'normal' | 'slow' */
+  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'all', speed: 'normal' };
+  // Escape hides the bubble on this page until it is reloaded (red links still show).
+  let pausedForPage = false;
   let settings = Object.assign({}, DEFAULT_SETTINGS);
   const isOn = () => alive && settings.enabled !== false;
   let trusted = new Set();
@@ -787,6 +789,9 @@
     if (settings.bubble === 'off') return false;
     // A trusted destination stays silent in every mode (danger is never trusted).
     if (isTrusted(result)) return false;
+    if (pausedForPage && result.severity !== 'danger') return false;
+    // Links that stay on the same site are silent unless something is wrong.
+    if (Analyzer.isSameSite && Analyzer.isSameSite(result, location.hostname)) return false;
     if (settings.bubble === 'risky') return result.severity !== 'none' && !result.official;
     return true;
   }
@@ -1139,7 +1144,7 @@
     clearTimeout(hideTimer);
     if (anchor === activeAnchor) return;
     clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => show(anchor), DEBOUNCE_MS);
+    hoverTimer = setTimeout(() => show(anchor), SPEED_MS[settings.speed] || SPEED_MS.normal);
   }, { passive: true, capture: true });
 
   on(document, 'mousemove', (event) => {
@@ -1192,7 +1197,10 @@
   on(document, 'keydown', (event) => {
     if (blocker) { if (event.key === 'Escape') closeBlocker(); return; }
     if (!activeAnchor) return;
-    if (event.key === 'Escape') hide();
+    if (event.key === 'Escape') {
+      if (!pinned) pausedForPage = true; // a QR bubble just closes
+      hide();
+    }
     else if (event.key === 'Shift' && !event.repeat) setExpanded(!expanded);
   }, { passive: true });
 })();

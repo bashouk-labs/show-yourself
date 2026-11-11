@@ -168,5 +168,19 @@ check('en: describeChar cyrillic', analyzer.describeChar('Ó').text === 'FAKE â€
 check('en: no missing key', !JSON.stringify(analyzeLink('https://xn--80ak6aa92e.com/', 'paypal.com')).match(/"(f|c|script)\.[a-zA-Z.]+"/));
 I18n.setLang('fr');
 
+// Same-site links stay silent (v1.2.1)
+const same = analyzer.isSameSite;
+check('same site: google -> google', same(analyzeLink('https://www.google.com/maps', ''), 'www.google.com'));
+check('same site: subdomain', same(analyzeLink('https://mail.google.com/', ''), 'www.google.com'));
+check('same site: co.uk', same(analyzeLink('https://www.amazon.co.uk/gp', ''), 'amazon.co.uk'));
+check('other site: google -> youtube', !same(analyzeLink('https://www.youtube.com/', ''), 'www.google.com'));
+check('other site: amazon.fr vs amazon.com', !same(analyzeLink('https://www.amazon.com/', ''), 'www.amazon.fr'));
+check('hosting: github.io neighbours differ', !same(analyzeLink('https://evil.github.io/', ''), 'me.github.io'));
+check('same site but warning still shows', !same(analyzeLink('https://www.google.com/url?q=https://rnicr0soft.com/', ''), 'www.google.com'));
+check('lookalike on own domain still shows', !same(analyzeLink('https://xn--80ak6aa92e.com/', ''), 'xn--80ak6aa92e.com'));
+check('IP page never same site', !same(analyzeLink('http://192.168.1.1/admin', ''), '192.168.1.1'));
+check('empty page host (file://)', !same(analyzeLink('https://example.com/', ''), ''));
+check('null result', !same(null, 'example.com'));
+
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

@@ -46,6 +46,7 @@
     'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au', 'asn.au', 'id.au',
     'co.jp', 'ne.jp', 'or.jp', 'ac.jp', 'go.jp', 'gr.jp', 'lg.jp',
     'com.br', 'net.br', 'org.br', 'gov.br', 'edu.br',
+    'gob.es', 'com.es', 'org.es', 'nom.es', 'edu.es', 'gov.it', 'edu.it',
     'co.in', 'net.in', 'org.in', 'ac.in', 'gov.in', 'firm.in',
     'co.za', 'org.za', 'gov.za',
     'com.mx', 'org.mx', 'gob.mx',
@@ -179,7 +180,28 @@
     wetransfer: ['wetransfer.com', 'we.tl'],
     zoom: ['zoom.us', 'zoom.com'],
     telegram: ['telegram.org', 't.me', 'telegram.me'],
-    airbnb: ['airbnb.com']
+    airbnb: ['airbnb.com'],
+    aliexpress: ['aliexpress.com', 'aliexpress.us', 'alibaba.com', 'alicdn.com'],
+    temu: ['temu.com'],
+    shein: ['shein.com'],
+    commerzbank: ['commerzbank.de', 'commerzbank.com'],
+    postbank: ['postbank.de'],
+    deutschebank: ['deutsche-bank.de', 'db.com'],
+    correos: ['correos.es'],
+    bbva: ['bbva.es', 'bbva.com'],
+    caixabank: ['caixabank.es', 'caixabank.com'],
+    agenciatributaria: ['agenciatributaria.gob.es', 'agenciatributaria.es'],
+    posteitaliane: ['poste.it', 'posteitaliane.it'],
+    intesasanpaolo: ['intesasanpaolo.com'],
+    agenziaentrate: ['agenziaentrate.gov.it'],
+    inps: ['inps.it'],
+    correios: ['correios.com.br'],
+    nubank: ['nubank.com.br', 'nu.com.br'],
+    bradesco: ['bradesco.com.br'],
+    mercadolivre: ['mercadolivre.com.br', 'mercadolibre.com', 'mercadopago.com.br', 'mercadopago.com'],
+    israelpost: ['israelpost.co.il'],
+    bankhapoalim: ['bankhapoalim.co.il'],
+    leumi: ['leumi.co.il', 'bankleumi.co.il']
   };
 
   /**
@@ -256,7 +278,31 @@
     { key: 'wetransfer', name: 'WeTransfer', group: 'wetransfer' },
     { key: 'zoom', name: 'Zoom', group: 'zoom' },
     { key: 'telegram', name: 'Telegram', group: 'telegram' },
-    { key: 'airbnb', name: 'Airbnb', group: 'airbnb' }
+    { key: 'airbnb', name: 'Airbnb', group: 'airbnb' },
+    { key: 'aliexpress', name: 'AliExpress', group: 'aliexpress' },
+    { key: 'alibaba', name: 'Alibaba', group: 'aliexpress' },
+    { key: 'temu', name: 'Temu', group: 'temu' },
+    { key: 'shein', name: 'Shein', group: 'shein', fuzzy: false },
+    { key: 'commerzbank', name: 'Commerzbank', group: 'commerzbank' },
+    { key: 'postbank', name: 'Postbank', group: 'postbank', fuzzy: false },
+    { key: 'deutschebank', name: 'Deutsche Bank', group: 'deutschebank' },
+    { key: 'correos', name: 'Correos', group: 'correos', fuzzy: false },
+    { key: 'bbva', name: 'BBVA', group: 'bbva' },
+    { key: 'caixabank', name: 'CaixaBank', group: 'caixabank' },
+    { key: 'agenciatributaria', name: 'Agencia Tributaria', group: 'agenciatributaria' },
+    { key: 'posteitaliane', name: 'Poste Italiane', group: 'posteitaliane' },
+    { key: 'intesasanpaolo', name: 'Intesa Sanpaolo', group: 'intesasanpaolo' },
+    { key: 'agenziaentrate', name: 'Agenzia delle Entrate', group: 'agenziaentrate' },
+    { key: 'inps', name: 'INPS', group: 'inps' },
+    { key: 'correios', name: 'Correios', group: 'correios', fuzzy: false },
+    { key: 'nubank', name: 'Nubank', group: 'nubank' },
+    { key: 'bradesco', name: 'Bradesco', group: 'bradesco' },
+    { key: 'mercadolivre', name: 'Mercado Livre', group: 'mercadolivre' },
+    { key: 'mercadolibre', name: 'Mercado Libre', group: 'mercadolivre' },
+    { key: 'mercadopago', name: 'Mercado Pago', group: 'mercadolivre' },
+    { key: 'israelpost', name: 'Israel Post', group: 'israelpost' },
+    { key: 'bankhapoalim', name: 'Bank Hapoalim', group: 'bankhapoalim' },
+    { key: 'leumi', name: 'Bank Leumi', group: 'leumi', fuzzy: false }
   ];
 
   /** Every official domain → its group, for fast lookup. */
@@ -1200,8 +1246,21 @@
     return result;
   }
 
+  /**
+   * True when a harmless link stays on the page's own site (same registrable
+   * domain): such links are not worth a bubble. Never for IPs or warnings.
+   */
+  function isSameSite(result, pageHost) {
+    if (!result || !result.host || result.file || result.sender) return false;
+    if (result.severity !== 'none' || result.host.isIP) return false;
+    const page = String(pageHost || '').toLowerCase().replace(/\.$/, '');
+    if (!page || isIPv4(page) || page.indexOf(':') !== -1 || page.indexOf('.') === -1) return false;
+    return splitHost(page).registrable === result.host.registrableAscii;
+  }
+
   return {
     analyzeLink: analyzeLink,
+    isSameSite: isSameSite,
     analyzeSender: analyzeSender,
     analyzeFile: analyzeFile,
     describeChar: describeChar,

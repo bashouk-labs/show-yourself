@@ -170,6 +170,21 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
       return;
     }
     const query = new URLSearchParams({ id: String(item.id), name: result.name });
-    chrome.tabs.create({ url: chrome.runtime.getURL('file-warning.html') + '?' + query });
+    chrome.tabs.create({ url: chrome.runtime.getURL('file-warning.html') + '?' + query }, (tab) => {
+      if (tab) chrome.storage.session.set({ ['fw' + tab.id]: item.id });
+    });
+  });
+});
+
+// We warn, we never block: if the warning tab is closed without a choice, the
+// download resumes. The tab clears its entry once Keep or Delete is clicked.
+// Session storage because the service worker may restart in between.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  const key = 'fw' + tabId;
+  chrome.storage.session.get(key, (data) => {
+    const id = data[key];
+    if (id == null) return;
+    chrome.storage.session.remove(key);
+    chrome.downloads.resume(id, () => void chrome.runtime.lastError);
   });
 });

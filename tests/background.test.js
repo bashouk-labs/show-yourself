@@ -18,6 +18,7 @@ const sandbox = {
     storage: { onChanged: listener, local: { get: noop } },
     contextMenus: { onClicked: listener },
     downloads: { onDeterminingFilename: listener },
+    tabs: { onRemoved: listener },
   },
 };
 vm.createContext(sandbox);

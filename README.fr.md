@@ -73,7 +73,7 @@ Voir [PRIVACY.md](PRIVACY.md) ou https://showyourself.app/privacy/
 
 ## Installation
 
-- Depuis le Chrome Web Store (lien bientôt disponible).
+- Depuis le [Chrome Web Store](https://chromewebstore.google.com/detail/show-yourself-anti-phishi/aaedgbpkjdmnecoebaimhofoanajchcc).
 - Depuis le code source : ouvrez `chrome://extensions`, activez le **Mode développeur**,
   cliquez sur **Charger l'extension non empaquetée** et choisissez ce dossier.
 

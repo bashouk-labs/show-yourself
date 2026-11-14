@@ -127,18 +127,12 @@
     storage.set({ trusted: Array.from(trusted).sort() });
   }
 
-  /** Daily buckets { 'YYYY-MM-DD': [spotted, blocked] }, kept 30 days. */
+  /** Counted by the service worker: one writer, so frames and tabs never overwrite each other. */
   function recordStat(index) {
     if (!storage) return;
-    const day = new Date().toISOString().slice(0, 10);
-    storage.get('stats', (data) => {
-      const stats = data.stats || {};
-      stats[day] = stats[day] || [0, 0];
-      stats[day][index]++;
-      const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-      Object.keys(stats).forEach((d) => { if (d < cutoff) delete stats[d]; });
-      storage.set({ stats });
-    });
+    try {
+      chrome.runtime.sendMessage({ type: 'sy-stat', index }, () => void chrome.runtime.lastError);
+    } catch (e) { /* extension reloaded: this old script can no longer talk to it */ }
   }
 
   // --- FONT: Atkinson Hyperlegible Mono (Braille Institute, SIL OFL) ---

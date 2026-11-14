@@ -153,6 +153,27 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   chrome.tabs.sendMessage(tab.id, msg, { frameId }, () => void chrome.runtime.lastError);
 });
 
+// --- Daily counter ----------------------------------------------------------
+// Daily buckets { 'YYYY-MM-DD': [spotted, blocked] }, kept 30 days. Every frame
+// of every tab reports here and updates run one after another, so no count is lost.
+
+let statsQueue = Promise.resolve();
+
+async function bumpStat(index) {
+  const day = new Date().toISOString().slice(0, 10);
+  const { stats = {} } = await chrome.storage.local.get('stats');
+  stats[day] = stats[day] || [0, 0];
+  stats[day][index]++;
+  const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  Object.keys(stats).forEach((d) => { if (d < cutoff) delete stats[d]; });
+  await chrome.storage.local.set({ stats });
+}
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (!msg || msg.type !== 'sy-stat' || (msg.index !== 0 && msg.index !== 1)) return;
+  statsQueue = statsQueue.then(() => bumpStat(msg.index)).catch(() => {});
+});
+
 // --- Disguised downloads ----------------------------------------------------
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {

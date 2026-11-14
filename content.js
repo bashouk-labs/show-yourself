@@ -767,9 +767,11 @@
   function refreshPage() {
     if (!isOn()) { hide(); closeBlocker(); clearOutlines(); return; }
     if (activeAnchor) {
+      // A pinned bubble (QR code) cannot be rebuilt from its anchor, an image: keep its result.
       const anchor = activeAnchor;
+      const preset = pinned ? activeResult : null;
       hide();
-      show(anchor);
+      show(anchor, preset);
     }
     clearOutlines();
     if (scanTimer) clearTimeout(scanTimer);

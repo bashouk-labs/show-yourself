@@ -980,11 +980,17 @@
     show(anchor, result);
   }
 
+  const QR_MAX_SIDE_PX = 1600; // same cap as the service worker
+
   /** Draws the right-clicked image (img, inline SVG or canvas) into a PNG data URL. */
   function grabImage(node) {
     return new Promise((resolve) => {
-      const toPng = (source, w, h) => {
+      const toPng = (source, sw, sh) => {
         try {
+          // Huge pictures are shrunk first: a QR code needs far less, and the PNG is sent to the worker.
+          const k = Math.min(1, QR_MAX_SIDE_PX / Math.max(sw, sh));
+          const w = Math.max(1, Math.round(sw * k));
+          const h = Math.max(1, Math.round(sh * k));
           const c = document.createElement('canvas');
           c.width = w; c.height = h;
           const ctx = c.getContext('2d');
@@ -996,7 +1002,7 @@
       };
       if (!node) return resolve(null);
       const canvas = node.closest('canvas');
-      if (canvas) { try { return resolve(canvas.toDataURL('image/png')); } catch (e) { return resolve(null); } }
+      if (canvas) return canvas.width && canvas.height ? toPng(canvas, canvas.width, canvas.height) : resolve(null);
       const svg = node.closest('svg');
       const img = node.closest('img');
       if (img) {

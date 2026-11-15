@@ -981,10 +981,16 @@
   // is shown in a pinned bubble.
   let lastContextTarget = null;
   const QR_MIN_DRAWN_PX = 60;
+  const QR_MENU_RESET_MS = 800; // well after the menu has opened: Chrome reads the entries at that moment
+  let qrMenuReset = null;
 
-  /** A canvas or inline SVG big and square enough to be a QR code (not an icon). */
+  /**
+   * A canvas or inline SVG big and square enough to be a QR code (not an icon).
+   * A picture inside an SVG (<image>) is left out: Chrome already treats it as an image,
+   * so the image entry shows by itself.
+   */
   function drawnQrCandidate(node) {
-    if (!node || node.closest('img')) return false;
+    if (!node || node.closest('img') || node.localName === 'image') return false;
     const drawn = node.closest('canvas, svg');
     if (!drawn) return false;
     const r = drawn.getBoundingClientRect();
@@ -996,10 +1002,17 @@
   function noteContextTarget(event) {
     lastContextTarget = event.target instanceof Element ? event.target : null;
     if (!isOn() || !Features || !Features.isOn('qrCode')) return;
-    try {
-      chrome.runtime.sendMessage({ type: 'sy-qr-target', drawn: drawnQrCandidate(lastContextTarget) },
-        () => void chrome.runtime.lastError);
-    } catch (e) { /* test page, or extension reloaded */ }
+    const tell = (drawn) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'sy-qr-target', drawn }, () => void chrome.runtime.lastError);
+      } catch (e) { /* test page, or extension reloaded */ }
+    };
+    const drawn = drawnQrCandidate(lastContextTarget);
+    tell(drawn);
+    // Once the menu is open, go back to the image entry alone. Left as is, the next
+    // right-click on a picture would find two entries and Chrome would fold them into a submenu.
+    clearTimeout(qrMenuReset);
+    if (drawn) qrMenuReset = setTimeout(() => tell(false), QR_MENU_RESET_MS);
   }
   // mousedown comes first and leaves the background more time; contextmenu covers the keyboard.
   on(document, 'mousedown', (event) => { if (event.button === 2) noteContextTarget(event); }, { capture: true, passive: true });

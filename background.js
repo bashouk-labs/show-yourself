@@ -39,7 +39,12 @@ const ignoreError = () => void chrome.runtime.lastError;
 // The QR entries exist only while the extension is switched on.
 //  - 'sy-qr': on <img>.
 //  - 'sy-qr-page': on a canvas or inline SVG, which Chrome does not treat as
-//    images. Hidden until the page reports a right-click on one ('sy-qr-target').
+//    images. It exists only while the page reports a right-click on one
+//    ('sy-qr-target'), and is removed right after.
+//    Why not simply hide it: Chrome counts hidden entries too, and with two
+//    entries matching a picture it folds them into a submenu (one more click).
+//    Its context is 'all': Chrome gives a canvas its own media type, so neither
+//    'image' nor 'page' ever matches it.
 function syncQrMenu() {
   chrome.contextMenus.removeAll(() => {
     if (!ShowYourselfFeatures.isOn('qrCode')) return;
@@ -47,7 +52,6 @@ function syncQrMenu() {
       if (!isEnabled(settings)) return;
       const title = ShowYourselfI18n.t('qr.menu');
       chrome.contextMenus.create({ id: 'sy-qr', title, contexts: ['image'] }, ignoreError);
-      chrome.contextMenus.create({ id: 'sy-qr-page', title, contexts: ['page', 'frame'], visible: false }, ignoreError);
     });
   });
 }
@@ -187,9 +191,13 @@ async function bumpStat(index) {
 chrome.runtime.onMessage.addListener((msg) => {
   if (!msg) return;
   if (msg.type === 'sy-qr-target') {
-    // One entry at a time: the page one on a drawn QR code, the image one everywhere else.
-    chrome.contextMenus.update('sy-qr', { visible: !msg.drawn }, ignoreError);
-    chrome.contextMenus.update('sy-qr-page', { visible: Boolean(msg.drawn) }, ignoreError);
+    // The image entry never moves. The other one shows only on a drawn QR code, where
+    // Chrome sees no image: the two never match the same right-click.
+    if (msg.drawn) {
+      chrome.contextMenus.create({ id: 'sy-qr-page', title: ShowYourselfI18n.t('qr.menu'), contexts: ['all'] }, ignoreError);
+    } else {
+      chrome.contextMenus.remove('sy-qr-page', ignoreError);
+    }
     return;
   }
   if (msg.type !== 'sy-stat' || (msg.index !== 0 && msg.index !== 1)) return;

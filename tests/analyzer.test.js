@@ -182,5 +182,40 @@ check('IP page never same site', !same(analyzeLink('http://192.168.1.1/admin', '
 check('empty page host (file://)', !same(analyzeLink('https://example.com/', ''), ''));
 check('null result', !same(null, 'example.com'));
 
+// --- Public Suffix List ------------------------------------------------------
+check('psl: eu.org neighbours differ', _internal.splitHost('foo.eu.org').registrable === 'foo.eu.org');
+check('psl: uk.com', _internal.splitHost('www.shop.uk.com').registrable === 'shop.uk.com');
+check('psl: wildcard *.ck', _internal.splitHost('a.b.co.ck').registrable === 'b.co.ck');
+check('psl: exception !www.ck', _internal.splitHost('www.ck').registrable === 'www.ck');
+check('psl: plain .com unchanged', _internal.splitHost('a.b.example.com').registrable === 'example.com');
+check('psl: official domain that is a suffix', analyzeLink('https://raw.githubusercontent.com/a/b', '').severity === 'none');
+
+// --- Brand names that are also everyday words --------------------------------
+function level(href) { const r = analyzeLink(href, ''); return r ? r.severity : 'null'; }
+['https://apple-pie.com/', 'https://orange-county.com/', 'https://chase-the-sun.com/', 'https://zoom-photo.fr/',
+  'https://the-ledger.com/', 'https://my-ups.com/'].forEach((href) => {
+  check('everyday word is not a trap: ' + href, level(href) === 'caution', level(href));
+});
+['https://apple-login.com/', 'https://orange-service-client.com/', 'https://ups-tracking.com/',
+  'https://apple.com.evil-site.fr/', 'https://paypal-login.com/'].forEach((href) => {
+  check('bait word keeps the trap: ' + href, level(href) === 'danger', level(href));
+});
+
+// --- Sender display names: whole words ---------------------------------------
+function sender(email, name) { const r = analyzer.analyzeSender(email, name); return r ? r.severity : 'null'; }
+[['bob@gmail.com', 'Purchase Department'], ['bob@gmail.com', 'Pineapple Studio'], ['amy@outlook.com', 'Zoomalia'],
+  ['x@gmail.com', 'Orange County Library'], ['chase@gmail.com', 'Chase Williams'], ['info@amazon.fr', 'Amazon']].forEach((p) => {
+  check('sender clean: ' + p[1], sender(p[0], p[1]) === 'none', sender(p[0], p[1]));
+});
+[['x@gmail.com', 'DHL Express'], ['x@gmail.com', 'UPS Delivery'], ['x@gmail.com', 'PayPal Support'], ['x@gmail.com', 'Apple'],
+  ['x@gmail.com', 'Apple Support'], ['x@gmail.com', 'La Banque Postale'], ['x@gmail.com', 'PayPalSupport']].forEach((p) => {
+  check('sender trap: ' + p[1], sender(p[0], p[1]) === 'danger', sender(p[0], p[1]));
+});
+check('sender caution: SFR from unknown domain', sender('x@evil-site.ru', 'SFR Facture') === 'caution');
+
+// --- Redirect findings carry their target (trusted sites keep showing them) ---
+r = analyzeLink('https://www.google.com/x?redirect=https://evil-site.com/', '');
+check('redirect target exposed', r && r.findings.some((f) => f.kind === 'redirect' && f.target === 'evil-site.com'), summary(r));
+
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

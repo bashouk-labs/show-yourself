@@ -34,7 +34,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["features.js", "i18n.js", "files.js", "analyzer.js", "content.js"],
+      "js": ["features.js", "i18n.js", "files.js", "lib/psl.js", "analyzer.js", "content.js"],
       "run_at": "document_idle",
       "all_frames": true
     }

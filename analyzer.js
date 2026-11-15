@@ -20,13 +20,17 @@
   var I18n = root && root.ShowYourselfI18n ? root.ShowYourselfI18n : require('./i18n.js');
   var Files = root && root.ShowYourselfFiles ? root.ShowYourselfFiles :
     (typeof require === 'function' ? require('./files.js') : null);
-  var api = factory(URLImpl, I18n, Files);
+  var Psl = root && root.ShowYourselfPSL ? root.ShowYourselfPSL : null;
+  if (!Psl && typeof require === 'function') {
+    try { Psl = require('./lib/psl.js'); } catch (e) { Psl = null; }
+  }
+  var api = factory(URLImpl, I18n, Files, Psl);
   if (typeof module === 'object' && module.exports) {
     module.exports = api;
   } else {
     root.ShowYourselfAnalyzer = api;
   }
-})(typeof self !== 'undefined' ? self : this, function (URLImpl, I18n, Files) {
+})(typeof self !== 'undefined' ? self : this, function (URLImpl, I18n, Files, Psl) {
   'use strict';
   const t = I18n.t;
 
@@ -37,8 +41,10 @@
   const LEVEL_RANK = { info: 1, caution: 2, danger: 3 };
 
   /**
-   * Two-label public suffixes (interim list, to be replaced by the full
-   * Public Suffix List). "x.co.uk" belongs to "x", not to "co.uk".
+   * Well-known two-label public suffixes: "x.co.uk" belongs to "x", not to
+   * "co.uk". The full Public Suffix List (lib/psl.js) is used to split hosts;
+   * this short list is the fallback without it, and says which suffixes are
+   * serious enough to accept "brand.<suffix>" as official.
    */
   const MULTI_PART_SUFFIXES = new Set([
     'co.uk', 'org.uk', 'gov.uk', 'ac.uk', 'me.uk', 'ltd.uk', 'plc.uk', 'net.uk', 'sch.uk', 'nhs.uk', 'police.uk',
@@ -208,11 +214,14 @@
    * Brand names watched in addresses.
    * - key: how it is written inside a domain (lowercase, no hyphen)
    * - fuzzy: false for common words (to avoid false alarms like "orage")
+   * - word: true for names that are also everyday words or first names:
+   *   "apple-pie.com" or "Chase Williams" is not an imitation on its own,
+   *   only next to a bait word ("apple-login.com", "Apple Support").
    * Keys of 4 characters or less only match exactly.
    */
   const BRANDS = [
     { key: 'paypal', name: 'PayPal', group: 'paypal' },
-    { key: 'apple', name: 'Apple', group: 'apple' },
+    { key: 'apple', name: 'Apple', group: 'apple', word: true },
     { key: 'icloud', name: 'iCloud', group: 'apple' },
     { key: 'appleid', name: 'Apple ID', group: 'apple' },
     { key: 'microsoft', name: 'Microsoft', group: 'microsoft' },
@@ -229,7 +238,7 @@
     { key: 'facebook', name: 'Facebook', group: 'meta' },
     { key: 'instagram', name: 'Instagram', group: 'meta' },
     { key: 'whatsapp', name: 'WhatsApp', group: 'meta' },
-    { key: 'messenger', name: 'Messenger', group: 'meta', fuzzy: false },
+    { key: 'messenger', name: 'Messenger', group: 'meta', fuzzy: false, word: true },
     { key: 'netflix', name: 'Netflix', group: 'netflix' },
     { key: 'linkedin', name: 'LinkedIn', group: 'linkedin' },
     { key: 'dropbox', name: 'Dropbox', group: 'dropbox' },
@@ -237,7 +246,7 @@
     { key: 'adobe', name: 'Adobe', group: 'adobe' },
     { key: 'dhl', name: 'DHL', group: 'dhl' },
     { key: 'fedex', name: 'FedEx', group: 'fedex' },
-    { key: 'ups', name: 'UPS', group: 'ups' },
+    { key: 'ups', name: 'UPS', group: 'ups', word: true },
     { key: 'laposte', name: 'La Poste', group: 'laposte' },
     { key: 'colissimo', name: 'Colissimo', group: 'laposte' },
     { key: 'labanquepostale', name: 'La Banque Postale', group: 'laposte' },
@@ -246,7 +255,7 @@
     { key: 'impots', name: 'impots.gouv.fr', group: 'impots' },
     { key: 'antai', name: 'ANTAI (amendes)', group: 'antai' },
     { key: 'franceconnect', name: 'FranceConnect', group: 'franceconnect' },
-    { key: 'orange', name: 'Orange', group: 'orange', fuzzy: false },
+    { key: 'orange', name: 'Orange', group: 'orange', fuzzy: false, word: true },
     { key: 'sfr', name: 'SFR', group: 'sfr' },
     { key: 'bouyguestelecom', name: 'Bouygues Telecom', group: 'bouygues' },
     { key: 'creditagricole', name: 'Crédit Agricole', group: 'creditagricole' },
@@ -259,7 +268,7 @@
     { key: 'binance', name: 'Binance', group: 'binance' },
     { key: 'coinbase', name: 'Coinbase', group: 'coinbase' },
     { key: 'metamask', name: 'MetaMask', group: 'metamask' },
-    { key: 'ledger', name: 'Ledger', group: 'ledger', fuzzy: false },
+    { key: 'ledger', name: 'Ledger', group: 'ledger', fuzzy: false, word: true },
     { key: 'steampowered', name: 'Steam', group: 'steam' },
     { key: 'steamcommunity', name: 'Steam', group: 'steam' },
     { key: 'roblox', name: 'Roblox', group: 'roblox' },
@@ -269,14 +278,14 @@
     { key: 'yahoo', name: 'Yahoo', group: 'yahoo' },
     { key: 'ebay', name: 'eBay', group: 'ebay' },
     { key: 'spotify', name: 'Spotify', group: 'spotify' },
-    { key: 'chase', name: 'Chase', group: 'chase', fuzzy: false },
+    { key: 'chase', name: 'Chase', group: 'chase', fuzzy: false, word: true },
     { key: 'wellsfargo', name: 'Wells Fargo', group: 'wellsfargo' },
     { key: 'bankofamerica', name: 'Bank of America', group: 'bankofamerica' },
     { key: 'americanexpress', name: 'American Express', group: 'amex' },
     { key: 'mastercard', name: 'Mastercard', group: 'mastercard' },
     { key: 'github', name: 'GitHub', group: 'github' },
     { key: 'wetransfer', name: 'WeTransfer', group: 'wetransfer' },
-    { key: 'zoom', name: 'Zoom', group: 'zoom' },
+    { key: 'zoom', name: 'Zoom', group: 'zoom', word: true },
     { key: 'telegram', name: 'Telegram', group: 'telegram' },
     { key: 'airbnb', name: 'Airbnb', group: 'airbnb' },
     { key: 'aliexpress', name: 'AliExpress', group: 'aliexpress' },
@@ -304,6 +313,13 @@
     { key: 'bankhapoalim', name: 'Bank Hapoalim', group: 'bankhapoalim' },
     { key: 'leumi', name: 'Bank Leumi', group: 'leumi', fuzzy: false }
   ];
+
+  /** Words phishers put next to a brand name ("apple-login", "Orange Service Client"). */
+  const BAIT_WORDS = new Set(('login signin sign log auth secure security securite verify verification account accounts ' +
+    'compte comptes connexion support help aide assistance service services client clients customer care team ' +
+    'update billing facture factures invoice pay payment payments paiement bank banque wallet id store shop ' +
+    'delivery livraison colis suivi tracking express mobile telecom online notification notifications alert alerts ' +
+    'alerte info noreply meeting').split(' '));
 
   /** Every official domain → its group, for fast lookup. */
   const OFFICIAL_DOMAIN_TO_GROUP = new Map();
@@ -460,23 +476,44 @@
    */
   function splitHost(hostAscii) {
     const labels = hostAscii.split('.');
-    let suffixLen = 1;
-    if (labels.length >= 3 && HOSTING_SUFFIXES.has(labels.slice(-3).join('.'))) {
-      suffixLen = 3;
-    } else if (labels.length >= 2) {
-      const lastTwo = labels.slice(-2).join('.');
-      if (HOSTING_SUFFIXES.has(lastTwo) || MULTI_PART_SUFFIXES.has(lastTwo)) suffixLen = 2;
-    }
+    const suffixLen = suffixLength(labels);
     const regLen = Math.min(labels.length, suffixLen + 1);
     const suffix = labels.slice(-suffixLen).join('.');
+    let hosting = null;
+    for (let j = labels.length - suffixLen; j < labels.length && !hosting; j++) {
+      if (HOSTING_SUFFIXES.has(labels.slice(j).join('.'))) hosting = suffix;
+    }
     return {
       labels: labels,
       suffix: suffix,
       suffixLen: suffixLen,
       registrable: labels.slice(-regLen).join('.'),
       subCount: labels.length - regLen,
-      hosting: HOSTING_SUFFIXES.has(suffix) ? suffix : null
+      hosting: hosting
     };
+  }
+
+  /** Public Suffix List as Sets, built on first use (the list is one long string). */
+  let pslSets = null;
+  function publicSuffixes() {
+    if (pslSets === null) {
+      const toSet = function (text) { return new Set(text ? text.split(' ') : []); };
+      pslSets = Psl ? { rules: toSet(Psl.rules), wild: toSet(Psl.wild), except: toSet(Psl.except) } : false;
+    }
+    return pslSets;
+  }
+
+  /** Number of labels in the public suffix: longest matching rule, one label by default. */
+  function suffixLength(labels) {
+    const psl = publicSuffixes();
+    for (let i = 0; i < labels.length; i++) {
+      const count = labels.length - i;
+      const tail = labels.slice(i).join('.');
+      if (psl && psl.except.has(tail)) return count - 1; // "!www.ck": a real site under "*.ck"
+      if (HOSTING_SUFFIXES.has(tail) || MULTI_PART_SUFFIXES.has(tail) || (psl && psl.rules.has(tail))) return count;
+      if (psl && count > 1 && psl.wild.has(labels.slice(i + 1).join('.'))) return count;
+    }
+    return 1;
   }
 
   /** Is this public suffix trustworthy enough to accept "brand.<suffix>" as official? */
@@ -490,6 +527,12 @@
   function officialGroupsOf(registrable) {
     const groups = new Set();
     if (OFFICIAL_DOMAIN_TO_GROUP.has(registrable)) groups.add(OFFICIAL_DOMAIN_TO_GROUP.get(registrable));
+    // An official domain that is itself a public suffix ("x.githubusercontent.com")
+    const all = registrable.split('.');
+    for (let i = 1; i < all.length - 1; i++) {
+      const tail = all.slice(i).join('.');
+      if (OFFICIAL_DOMAIN_TO_GROUP.has(tail)) groups.add(OFFICIAL_DOMAIN_TO_GROUP.get(tail));
+    }
     const parts = splitHost(registrable);
     if (parts.labels.length > parts.suffixLen && isTrustedSuffix(parts.suffix)) {
       const sld = parts.labels[0].replace(/-/g, '');
@@ -850,9 +893,13 @@
         }
       });
       if (current.length) tokens.push(current);
+      const words = tokens.map(function (tok) { return tok.map(function (c) { return c.ch; }).join(''); });
+      const hasBait = words.some(function (w) { return BAIT_WORDS.has(w); });
+      let joined = null;
       if (tokens.length > 1) {
         // "pay-pal" → "paypal"
-        tokens.push([].concat.apply([], tokens));
+        joined = [].concat.apply([], tokens);
+        tokens.push(joined);
       }
 
       tokens.forEach(function (tok) {
@@ -880,6 +927,13 @@
             level: 'caution',
             title: t('f.brandTld.title', { name: match.brand.name }),
             detail: t('f.brandTld.detail', { official: official, suffix: host.suffix })
+          };
+        } else if (match.type === 'exact' && match.brand.word && joined && tok !== joined && !hasBait) {
+          // An everyday word next to other words ("apple-pie", "chase-the-sun"): worth a look, not a trap
+          finding = {
+            level: 'caution',
+            title: t('f.brandHas.title', { name: match.brand.name }),
+            detail: t('f.brandHas.detail', { name: match.brand.name, official: official })
           };
         } else if (match.type === 'exact') {
           finding = {
@@ -1029,6 +1083,8 @@
         const isDanger = target.severity === 'danger';
         findings.push({
           level: isDanger ? 'danger' : 'caution',
+          kind: 'redirect',
+          target: target.host.registrableAscii,
           title: t('f.redirect.title'),
           detail: t('f.redirect.detail', { reg: target.host.registrableDisplay }) +
             (isDanger ? t('f.redirect.trap', { title: target.findings[0].title }) : '')
@@ -1230,12 +1286,27 @@
         detail: t('f.senderAddr.detail', { written: written, reg: regShown }) });
     } else if (!result.findings.some(function (f) { return f.kind === 'imitate'; })) {
       // Display name names a brand the address does not belong to
-      const norm = name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '');
-      const ownGroup = OFFICIAL_DOMAIN_TO_GROUP.get(reg);
-      const brand = BRANDS.find(function (b) {
-        return b.key.length >= 4 && norm.indexOf(b.key) !== -1 && b.group !== ownGroup;
-      });
-      if (brand && !OFFICIAL_DOMAIN_TO_GROUP.has(reg) || brand && FREEMAIL.has(reg)) {
+      // Whole words only: "Purchase Dept" does not say "Chase", "DHL Express" does say "DHL"
+      const words = name.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+        .split(/[^a-z0-9]+/).filter(Boolean);
+      const hasBait = words.some(function (w) { return BAIT_WORDS.has(w); });
+      const says = function (b) {
+        for (let i = 0; i < words.length; i++) {
+          // "La Banque Postale", "pay pal": a few words in a row spell the name
+          let run = '';
+          for (let j = i; j < words.length && run.length < b.key.length; j++) {
+            run += words[j];
+            if (run !== b.key) continue;
+            // An everyday word among others ("Chase Williams", "Orange County Library") needs a bait word
+            return !b.word || words.length === j - i + 1 || hasBait;
+          }
+        }
+        // Glued to something else: "PayPalSupport"
+        return !b.word && b.key.length >= 6 && words.some(function (w) { return w.indexOf(b.key) !== -1; });
+      };
+      const ownGroups = officialGroupsOf(reg);
+      const brand = BRANDS.find(function (b) { return !ownGroups.has(b.group) && says(b); });
+      if (brand && (ownGroups.size === 0 || FREEMAIL.has(reg))) {
         result.findings.push({ level: FREEMAIL.has(reg) ? 'danger' : 'caution', title: t('f.senderName.title', { brand: brand.name }),
           detail: t(FREEMAIL.has(reg) ? 'f.senderName.free' : 'f.senderName.detail', { brand: brand.name, reg: regShown }) });
       }

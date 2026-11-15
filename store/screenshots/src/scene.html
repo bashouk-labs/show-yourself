@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<!-- Chrome Web Store screenshots. Rendered by capture.mjs at 800x500 CSS px x1.6 = 1280x800.
+     The bubble is the real one: the extension's own scripts run on this page. -->
+<meta name="show-yourself-demo" content="1" />
+<title>Show Yourself · store screenshot</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 800px; height: 500px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(120% 90% at 50% 0%, #1b2d52 0%, #0d1424 70%);
+    color: #e2e8f0;
+  }
+  :focus { outline: none; }
+
+  .head { text-align: center; padding: 22px 30px 0; height: 104px; }
+  .head h1 { margin: 0; font-size: 31px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+  .head p { margin: 6px 0 0; font-size: 14.5px; color: #b4c2d8; }
+  .head p b { color: #fff; font-weight: 600; }
+
+  .win {
+    position: absolute; left: 50px; right: 50px; top: 112px; bottom: -14px;
+    background: #fff; color: #1e293b; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+  .bar {
+    height: 34px; display: flex; align-items: center; gap: 12px; padding: 0 14px;
+    border-bottom: 1px solid #e5e9f0; font-size: 12.5px; color: #475569;
+  }
+  .bar .app { font-weight: 700; color: #1e293b; }
+  .bar .search { flex: 1; max-width: 360px; height: 22px; border-radius: 11px; background: #f1f5f9;
+    padding: 0 12px; display: flex; align-items: center; color: #64748b; font-size: 11.5px; }
+
+  /* --- Mail --- */
+  .mail { padding: 16px 26px; }
+  .subject { font-size: 18px; font-weight: 600; margin: 0 0 10px; }
+  .from { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: #f59e0b; color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  .who { font-size: 13px; line-height: 1.35; }
+  .who .name { font-weight: 600; padding: 1px 3px; }
+  .who .to { color: #64748b; font-size: 11.5px; }
+  .card { border: 1px solid #e5e9f0; border-radius: 10px; padding: 14px 18px; font-size: 13px; line-height: 1.55; }
+  .logo { font-weight: 800; font-size: 17px; color: #f59e0b; margin-bottom: 8px; }
+  .logo span { color: #1e3a8a; }
+  .card p { margin: 0 0 12px; }
+  .btn { display: inline-block; background: #f59e0b; color: #fff; text-decoration: none; font-weight: 600;
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; }
+  .attach { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 12px;
+    border: 1px solid #e5e9f0; border-radius: 8px; font-size: 13px; color: #1e293b; text-decoration: none; }
+  .attach .pdf { background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px; }
+
+  /* --- Search engine --- */
+  .serp { padding: 14px 40px; }
+  .stats { font-size: 11.5px; color: #64748b; margin-bottom: 10px; }
+  .res { margin-bottom: 18px; max-width: 560px; }
+  .res .site { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #334155; }
+  .res .fav { width: 22px; height: 22px; border-radius: 50%; background: #fef3c7; color: #b45309;
+    display: grid; place-items: center; font-weight: 800; font-size: 11px; }
+  .res .fav.grey { background: #e2e8f0; color: #475569; }
+  .res .site small { display: block; color: #64748b; font-size: 11px; }
+  .res a.title { display: inline-block; margin: 5px 0 3px; font-size: 17px; color: #1a4fd6; text-decoration: none; }
+  .res a.title.hover { text-decoration: underline; }
+  .res .snip { font-size: 12.5px; color: #475569; line-height: 1.5; }
+  .res .ad { font-weight: 700; color: #1e293b; font-size: 11px; margin-right: 2px; }
+</style>
+<script>
+  // Minimal stand-in for the extension APIs, so the real content scripts run here.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    window.SCENE = q.get('scene') || 'link';
+    window.LANG = q.get('lang') === 'fr' ? 'fr' : 'en';
+    document.documentElement.lang = window.LANG;
+    var noop = function () {};
+    window.chrome = {
+      runtime: { getURL: function (p) { return '/' + p; }, onMessage: { addListener: noop }, sendMessage: noop },
+      i18n: { getUILanguage: function () { return window.LANG; }, getMessage: function () { return ''; } },
+      storage: {
+        local: { get: function (k, cb) { setTimeout(function () { cb({}); }, 0); }, set: noop },
+        onChanged: { addListener: noop }
+      }
+    };
+    // Open the bubble's shadow root so the capture can point at a letter.
+    var attach = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = function (init) {
+      var root = attach.call(this, Object.assign({}, init, { mode: 'open' }));
+      window.SY_ROOT = root;
+      return root;
+    };
+  })();
+</script>
+</head>
+<body>
+<div class="head"><h1 id="h1"></h1><p id="sub"></p></div>
+<div class="win" id="win"></div>
+
+<script>
+  var T = {
+    en: {
+      link: ['The link lies.', 'Hover the button: the real address appears. The <b>“o”</b> is from the Cyrillic alphabet.'],
+      sender: ['So does the sender.', 'The name looks like an official address. Show Yourself shows <b>the real one</b>.'],
+      file: ['And the “PDF” is a program.', 'A hidden character flips the end of the name. Show Yourself <b>unmasks it</b>.'],
+      shady: ['A suspicious website?', 'The address starts with the right name, but the real site is <b>the part in bold</b>.'],
+      safe: ['A normal website? It says so too.', 'No trap detected: just the real address, <b>letter by letter</b>.'],
+      subject: 'Your parcel is on hold: action required',
+      to: 'to me',
+      body: 'Hello,<br>Your parcel #US-48291 could not be delivered: a customs fee of $1.99 is still due. Without action within 48 hours, it will be returned to the sender.',
+      cta: 'Pay and track my parcel',
+      fileName: 'invoice\u202Efdp.exe',
+      query: 'parcelgo track parcel',
+      stats: 'About 1,240,000 results',
+      shadyTitle: 'ParcelGo · Pay your customs fee',
+      shadySnip: 'Your parcel is waiting. Pay the customs fee now to release your delivery within 24 hours.',
+      safeTitle: 'ParcelGo · Track your parcel',
+      safeSnip: 'Enter your tracking number to follow your delivery in real time.',
+      helpTitle: 'Help · Frequently asked questions',
+      helpSnip: 'Delivery, returns, claims: all the answers to your questions.',
+      sponsored: 'Sponsored',
+      mail: 'Mail', search: 'Search'
+    },
+    fr: {
+      link: ['Le lien ment.', 'Survolez le bouton : la vraie adresse apparaît. Le <b>« o »</b> vient de l’alphabet cyrillique.'],
+      sender: ['L’expéditeur aussi.', 'Le nom imite une adresse officielle. Show Yourself montre <b>la vraie</b>.'],
+      file: ['Et le « PDF » est un programme.', 'Un caractère caché retourne la fin du nom. Show Yourself <b>le démasque</b>.'],
+      shady: ['Un site louche ?', 'L’adresse commence par le bon nom, mais le vrai site est <b>la partie en gras</b>.'],
+      safe: ['Un site normal ? Il le dit aussi.', 'Aucun piège détecté : juste la vraie adresse, <b>lettre par lettre</b>.'],
+      subject: 'Votre colis est en attente : action requise',
+      to: 'à moi',
+      body: 'Bonjour,<br>Votre colis n°FR-48291 n’a pas pu être livré : des frais de douane de 1,99 € restent à régler. Sans action sous 48 heures, il sera renvoyé à l’expéditeur.',
+      cta: 'Payer et suivre mon colis',
+      fileName: 'facture\u202Efdp.exe',
+      query: 'parcelgo suivi colis',
+      stats: 'Environ 1 240 000 résultats',
+      shadyTitle: 'ParcelGo · Réglez vos frais de douane',
+      shadySnip: 'Votre colis vous attend. Réglez les frais de douane maintenant pour être livré sous 24 heures.',
+      safeTitle: 'ParcelGo · Suivre votre colis',
+      safeSnip: 'Entrez votre numéro de suivi pour suivre votre livraison en temps réel.',
+      helpTitle: 'Aide · Questions fréquentes',
+      helpSnip: 'Livraison, retours, réclamations : toutes les réponses à vos questions.',
+      sponsored: 'Sponsorisé',
+      mail: 'Messagerie', search: 'Recherche'
+    }
+  }[LANG];
+
+  var LINK_TRAP = 'https://parcelg\u043e-delivery.com/pay';
+  var SHADY = 'https://parcelgo.com.track-fees.info/pay';
+  var SAFE = 'https://www.parcelgo.com/track';
+
+  document.getElementById('h1').textContent = T[SCENE][0];
+  document.getElementById('sub').innerHTML = T[SCENE][1];
+
+  function mail(opts) {
+    var sender = opts.sender
+      ? '<span class="name" id="target-sender" tabindex="0" email="service@parcelgo-customer-care.info" name="service@parcelgo.com">service@parcelgo.com</span>'
+      : '<span class="name">ParcelGo</span>';
+    var link = opts.link
+      ? '<a class="btn" id="target-link" href="' + LINK_TRAP + '">' + T.cta + '</a>'
+      : '<span class="btn">' + T.cta + '</span>';
+    var file = opts.file
+      ? '<a class="attach" id="target-file" href="/store/screenshots/src/x" download="' + T.fileName + '"><span class="pdf">PDF</span><span>' + T.fileName + '</span></a>'
+      : '';
+    return '<div class="bar"><span class="app">✉ ' + T.mail + '</span></div>' +
+      '<div class="mail"><h2 class="subject">' + T.subject + '</h2>' +
+      '<div class="from"><div class="avatar">P</div><div class="who">' + sender + '<div class="to">' + T.to + '</div></div></div>' +
+      '<div class="card"><div class="logo">Parcel<span>Go</span></div><p>' + T.body + '</p>' + link + '</div>' +
+      file + '</div>';
+  }
+
+  function serp(trapFirst) {
+    var shady = '<div class="res"><div class="site"><div class="fav">P</div><div><span class="ad">' + T.sponsored + '</span> ParcelGo<small>parcelgo.com › pay</small></div></div>' +
+      '<a class="title" ' + (trapFirst ? 'id="target-link" ' : '') + 'href="' + SHADY + '">' + T.shadyTitle + '</a>' +
+      '<div class="snip">' + T.shadySnip + '</div></div>';
+    var safe = '<div class="res"><div class="site"><div class="fav">P</div><div>ParcelGo<small>https://www.parcelgo.com › track</small></div></div>' +
+      '<a class="title" ' + (trapFirst ? '' : 'id="target-link" ') + 'href="' + SAFE + '">' + T.safeTitle + '</a>' +
+      '<div class="snip">' + T.safeSnip + '</div></div>';
+    var help = '<div class="res"><div class="site"><div class="fav grey">P</div><div>ParcelGo<small>https://www.parcelgo.com › help</small></div></div>' +
+      '<a class="title" href="https://www.parcelgo.com/help">' + T.helpTitle + '</a>' +
+      '<div class="snip">' + T.helpSnip + '</div></div>';
+    return '<div class="bar"><span class="app">' + T.search + '</span><span class="search">🔍&nbsp; ' + T.query + '</span></div>' +
+      // The safe scene has no stats line, so the bubble opens below the link instead of over the headline.
+      '<div class="serp">' + (trapFirst ? '<div class="stats">' + T.stats + '</div>' : '') +
+      (trapFirst ? shady + safe : safe + help) + '</div>';
+  }
+
+  document.getElementById('win').innerHTML = {
+    link: function () { return mail({ link: true }); },
+    sender: function () { return mail({ sender: true }); },
+    file: function () { return mail({ file: true }); },
+    shady: function () { return serp(true); },
+    safe: function () { return serp(false); }
+  }[SCENE]();
+</script>
+
+<script src="/features.js"></script>
+<script src="/i18n.js"></script>
+<script src="/files.js"></script>
+<script src="/lib/psl.js"></script>
+<script src="/analyzer.js"></script>
+<script src="/content.js"></script>
+<script>
+  // Opens the bubble on the scene's target, points the magnifier at one letter,
+  // optionally expands the details, then flags the page as ready.
+  var PLAN = {
+    link: { focus: '[\u043e]', expand: false },
+    sender: { expand: true },
+    file: { expand: true },
+    shady: { focus: 'track-fees', expand: true },
+    safe: { focus: 'parcelgo', expand: true }
+  }[SCENE];
+
+  function ready() { document.title = 'READY'; }
+
+  setTimeout(function () {
+    var target = document.getElementById('target-link') || document.getElementById('target-sender') || document.getElementById('target-file');
+    if (target.classList.contains('title')) target.classList.add('hover');
+    target.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    setTimeout(function () {
+      if (PLAN.expand) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      setTimeout(function () {
+        var spans = window.SY_ROOT ? Array.prototype.slice.call(window.SY_ROOT.querySelectorAll('.sy-domain span')) : [];
+        var letters = spans.filter(function (s) { return s.children.length === 0 && s.textContent.length === 1; });
+        var pick = null;
+        if (PLAN.focus === '[\u043e]') pick = letters.find(function (s) { return s.textContent === '\u043e'; });
+        else if (PLAN.focus) {
+          var text = letters.map(function (s) { return s.textContent; }).join('');
+          var i = text.indexOf(PLAN.focus);
+          if (i >= 0) pick = letters[i + 2];
+        }
+        if (pick) {
+          var r = pick.getBoundingClientRect();
+          document.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true }));
+        }
+        setTimeout(ready, 700);
+      }, 500);
+    }, 400);
+  }, 900);
+</script>
+</body>
+</html>

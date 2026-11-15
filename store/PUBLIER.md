@@ -5,9 +5,9 @@ Console : https://chrome.google.com/webstore/devconsole
 
 | Élément | Statut | Fichier |
 |---|---|---|
-| Zip à envoyer | ✅ | `store/show-yourself-1.2.0.zip` (sans tests ni test.html) |
+| Zip à envoyer | ✅ | `store/show-yourself-1.2.1.zip` (sans tests, test.html ni tools) |
 | Icône 128×128 | ✅ | `icons/icon-128.png` (déjà dans le zip) |
-| Captures 1280×800 | ✅ 4 FR + 4 EN, dans l'ordre de l'histoire | `store/screenshots/` |
+| Captures 1280×800 | ✅ 5 FR + 5 EN, dans l'ordre ci-dessous | `store/screenshots/` |
 | Vignette promo 440×280 | ✅ FR + EN | `store/promo-440x280-*.png` |
 | Nom + description courte (FR/EN) | ✅ | `_locales/*/messages.json` (lus automatiquement) |
 | Description longue FR/EN | ✅ | ci-dessous, à copier-coller |
@@ -15,14 +15,17 @@ Console : https://chrome.google.com/webstore/devconsole
 | Mini-site (présentation + confidentialité) | ✅ prêt, ❌ **à mettre en ligne** | `store/site/` (index.html + privacy/). Marche sur n'importe quelle adresse. Remplacer `STORE_URL` après publication |
 | Compte vérifié (e-mail de contact + frais 5 $ payés) | à vérifier | onglet « Compte » |
 
-### Le carrousel raconte une histoire (garder cet ordre)
+### Le carrousel (garder cet ordre)
 
-1. `story` : Le message a l'air parfait.
-2. `link` : Mais le lien ment.
-3. `sender` : L'expéditeur aussi.
-4. `file` : Et la facture est un programme.
+1. `link` : Le lien ment (lettre cyrillique).
+2. `sender` : L'expéditeur aussi.
+3. `file` : Et le « PDF » est un programme.
+4. `shady-site` : Un site louche ? (fausse adresse au début)
+5. `safe-site` : Un site normal ? Il le dit aussi.
 
 La marque « ParcelGo » est inventée : on n'utilise aucune vraie marque (règle du Store sur les marques déposées).
+
+**Refaire les captures** (après un changement de la bulle ou des textes) : `node store/screenshots/src/capture.mjs` depuis la racine du repo. Il faut Chrome et Node 22+. Les scènes sont dans `store/screenshots/src/scene.html`, et la bulle affichée est la vraie : la page charge le code de l'extension.
 
 ## Étapes dans la console
 
@@ -36,7 +39,7 @@ La marque « ParcelGo » est inventée : on n'utilise aucune vraie marque (règl
 3. **Pratiques de confidentialité** :
    - Objectif unique et justifications : copier les textes ci-dessous.
    - Code distant : **Non**. Données collectées : ne rien cocher.
-   - Cocher les 3 certifications. URL de confidentialité : https://showyourself.app/privacy/
+   - Cocher les 3 certifications. URL de confidentialité : https://showyourself.app/en/privacy/
 4. **Distribution** : public, tous les pays.
 5. **Envoyer pour examen**. Compter quelques jours, parfois plus : l'accès à tous les sites et aux téléchargements entraîne un examen plus poussé.
 

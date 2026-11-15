@@ -215,6 +215,8 @@
         mode.textContent = EN ? '🧪 Mode: local copy (extension not detected on this page).' : '🧪 Mode : copie locale (extension non détectée sur cette page).';
         const s0 = document.createElement('script');
         s0.src = './i18n.js';
+        const sPsl = document.createElement('script');
+        sPsl.src = './lib/psl.js';
         const s1 = document.createElement('script');
         s1.src = './analyzer.js';
         s1.onload = () => {
@@ -222,7 +224,8 @@
           s2.src = './content.js';
           document.body.appendChild(s2);
         };
-        s0.onload = () => document.body.appendChild(s1);
+        s0.onload = () => document.body.appendChild(sPsl);
+        sPsl.onload = () => document.body.appendChild(s1);
         document.body.appendChild(s0);
       }, 600);
     });

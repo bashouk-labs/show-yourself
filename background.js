@@ -8,7 +8,7 @@
  */
 importScripts('features.js', 'files.js', 'i18n.js', 'lib/jsQR.js');
 
-const CONTENT_FILES = ['features.js', 'i18n.js', 'files.js', 'analyzer.js', 'content.js'];
+const CONTENT_FILES = ['features.js', 'i18n.js', 'files.js', 'lib/psl.js', 'analyzer.js', 'content.js'];
 const QR_MAX_SIDE_PX = 1600;
 const QR_MAX_BYTES = 10 * 1024 * 1024;
 
@@ -34,10 +34,21 @@ async function injectIntoOpenTabs() {
   }
 }
 
-function createQrMenu() {
-  if (!ShowYourselfFeatures.isOn('qrCode')) return;
+const ignoreError = () => void chrome.runtime.lastError;
+
+// The QR entries exist only while the extension is switched on.
+//  - 'sy-qr': on <img>.
+//  - 'sy-qr-page': on a canvas or inline SVG, which Chrome does not treat as
+//    images. Hidden until the page reports a right-click on one ('sy-qr-target').
+function syncQrMenu() {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: 'sy-qr', title: ShowYourselfI18n.t('qr.menu'), contexts: ['image'] });
+    if (!ShowYourselfFeatures.isOn('qrCode')) return;
+    chrome.storage.local.get('settings', ({ settings }) => {
+      if (!isEnabled(settings)) return;
+      const title = ShowYourselfI18n.t('qr.menu');
+      chrome.contextMenus.create({ id: 'sy-qr', title, contexts: ['image'] }, ignoreError);
+      chrome.contextMenus.create({ id: 'sy-qr-page', title, contexts: ['page', 'frame'], visible: false }, ignoreError);
+    });
   });
 }
 
@@ -65,17 +76,20 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
   }
   injectIntoOpenTabs();
-  createQrMenu();
+  syncQrMenu();
   syncBadge();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  createQrMenu();
+  syncQrMenu();
   syncBadge();
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.settings) syncBadge();
+  if (area !== 'local' || !changes.settings) return;
+  syncBadge();
+  const was = isEnabled(changes.settings.oldValue);
+  if (was !== isEnabled(changes.settings.newValue)) syncQrMenu();
 });
 
 // --- QR codes ---------------------------------------------------------------
@@ -134,12 +148,13 @@ function grabFromPage(tabId, frameId) {
 }
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId !== 'sy-qr' || !tab || tab.id == null) return;
+  if ((info.menuItemId !== 'sy-qr' && info.menuItemId !== 'sy-qr-page') || !tab || tab.id == null) return;
   const frameId = info.frameId || 0;
   const msg = { type: 'sy-qr', text: null, error: false };
   try {
     const png = await grabFromPage(tab.id, frameId);
-    if (png) {
+    if (typeof png === 'string' && png.startsWith('data:image/png;base64,')) {
+      // Only an inline PNG is accepted from the page: never an address to fetch.
       msg.text = await decodeQr(png);
     } else if (isFetchableImageUrl(info.srcUrl)) {
       // Cross-origin image the page could not read back: fetch it anonymously.
@@ -170,7 +185,14 @@ async function bumpStat(index) {
 }
 
 chrome.runtime.onMessage.addListener((msg) => {
-  if (!msg || msg.type !== 'sy-stat' || (msg.index !== 0 && msg.index !== 1)) return;
+  if (!msg) return;
+  if (msg.type === 'sy-qr-target') {
+    // One entry at a time: the page one on a drawn QR code, the image one everywhere else.
+    chrome.contextMenus.update('sy-qr', { visible: !msg.drawn }, ignoreError);
+    chrome.contextMenus.update('sy-qr-page', { visible: Boolean(msg.drawn) }, ignoreError);
+    return;
+  }
+  if (msg.type !== 'sy-stat' || (msg.index !== 0 && msg.index !== 1)) return;
   statsQueue = statsQueue.then(() => bumpStat(msg.index)).catch(() => {});
 });
 
@@ -192,7 +214,12 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     }
     const query = new URLSearchParams({ id: String(item.id), name: result.name });
     chrome.tabs.create({ url: chrome.runtime.getURL('file-warning.html') + '?' + query }, (tab) => {
-      if (tab) chrome.storage.session.set({ ['fw' + tab.id]: item.id });
+      if (chrome.runtime.lastError || !tab) {
+        // No warning could be shown (no window open…): never leave the download stuck.
+        chrome.downloads.resume(item.id, ignoreError);
+        return;
+      }
+      chrome.storage.session.set({ ['fw' + tab.id]: item.id });
     });
   });
 });

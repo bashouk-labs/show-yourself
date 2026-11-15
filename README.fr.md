@@ -69,7 +69,7 @@ L'interface est en français ou en anglais, selon la langue de Chrome.
 ## Confidentialité
 
 Tout se passe sur votre ordinateur : pas de compte, pas de serveur, aucun pistage.
-Voir [PRIVACY.md](PRIVACY.md) ou https://showyourself.app/privacy/
+Voir [PRIVACY.md](PRIVACY.md).
 
 ## Installation
 
@@ -84,6 +84,7 @@ Voir [PRIVACY.md](PRIVACY.md) ou https://showyourself.app/privacy/
 Le code est public pour que chacun puisse vérifier ce que fait l'extension : rien ne quitte
 votre ordinateur. Vous pouvez le lire, utiliser l'extension et signaler des problèmes, mais
 le copier, le modifier ou le republier est interdit sans autorisation écrite. jsQR
-(Apache 2.0) et Atkinson Hyperlegible Mono (OFL 1.1) gardent leurs propres licences.
+(Apache 2.0), Atkinson Hyperlegible Mono (OFL 1.1) et la Public Suffix List (MPL 2.0)
+gardent leurs propres licences.
 
 Contact : contact@bashouk.com

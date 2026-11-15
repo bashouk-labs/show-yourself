@@ -65,7 +65,7 @@ The interface is in French or English, following Chrome's language.
 ## Privacy
 
 Everything runs on your computer: no account, no server, no tracking.
-See [PRIVACY.md](PRIVACY.md) or https://showyourself.app/privacy/
+See [PRIVACY.md](PRIVACY.md).
 
 ## Install
 
@@ -88,6 +88,7 @@ Open `test.html` in Chrome with the extension loaded to try every case by hand.
 |---|---|
 | `analyzer.js` | Link, sender and file-name analysis (pure, tested) |
 | `files.js` | Disguised file-name detection |
+| `lib/psl.js` | Public Suffix List, rebuilt with `tools/build-psl.js` |
 | `content.js` | Hover bubble, outlines, click blocker |
 | `background.js` | QR decoding, download guard, install flow |
 | `i18n.js`, `_locales/` | French / English |
@@ -100,7 +101,7 @@ Open `test.html` in Chrome with the extension loaded to try every case by hand.
 The code is public so you can check exactly what the extension does: nothing
 leaves your computer. You are welcome to read it, use the extension and report
 issues, but copying, modifying or republishing it is not allowed without
-written permission. jsQR (Apache 2.0) and Atkinson Hyperlegible Mono (OFL 1.1)
-keep their own licenses.
+written permission. jsQR (Apache 2.0), Atkinson Hyperlegible Mono (OFL 1.1) and
+the Public Suffix List (MPL 2.0) keep their own licenses.
 
 Contact: contact@bashouk.com

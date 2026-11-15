@@ -677,6 +677,12 @@
 
   function setExpanded(value) {
     if (!activeResult || expanded === value) return;
+    // The bubble keeps its side only while the pointer rests on it (it must not slip away).
+    // Opened from the keyboard, it is free to move to the side with the most room.
+    const box = tooltip.getBoundingClientRect();
+    const onBubble = lastPointer && lastPointer.x >= box.left && lastPointer.x <= box.right &&
+      lastPointer.y >= box.top && lastPointer.y <= box.bottom;
+    if (!onBubble) sideAbove = null;
     expanded = value;
     render(activeResult);
     tooltip.classList.add('sy-visible');

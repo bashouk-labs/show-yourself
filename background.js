@@ -8,7 +8,7 @@
  */
 importScripts('features.js', 'files.js', 'i18n.js', 'lib/jsQR.js');
 
-const CONTENT_FILES = ['features.js', 'i18n.js', 'files.js', 'analyzer.js', 'content.js'];
+const CONTENT_FILES = ['features.js', 'i18n.js', 'files.js', 'lib/psl.js', 'analyzer.js', 'content.js'];
 const QR_MAX_SIDE_PX = 1600;
 const QR_MAX_BYTES = 10 * 1024 * 1024;
 
@@ -34,10 +34,25 @@ async function injectIntoOpenTabs() {
   }
 }
 
-function createQrMenu() {
-  if (!ShowYourselfFeatures.isOn('qrCode')) return;
+const ignoreError = () => void chrome.runtime.lastError;
+
+// The QR entries exist only while the extension is switched on.
+//  - 'sy-qr': on <img>.
+//  - 'sy-qr-page': on a canvas or inline SVG, which Chrome does not treat as
+//    images. It exists only while the page reports a right-click on one
+//    ('sy-qr-target'), and is removed right after.
+//    Why not simply hide it: Chrome counts hidden entries too, and with two
+//    entries matching a picture it folds them into a submenu (one more click).
+//    Its context is 'all': Chrome gives a canvas its own media type, so neither
+//    'image' nor 'page' ever matches it.
+function syncQrMenu() {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: 'sy-qr', title: ShowYourselfI18n.t('qr.menu'), contexts: ['image'] });
+    if (!ShowYourselfFeatures.isOn('qrCode')) return;
+    chrome.storage.local.get('settings', ({ settings }) => {
+      if (!isEnabled(settings)) return;
+      const title = ShowYourselfI18n.t('qr.menu');
+      chrome.contextMenus.create({ id: 'sy-qr', title, contexts: ['image'] }, ignoreError);
+    });
   });
 }
 
@@ -65,17 +80,20 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
   }
   injectIntoOpenTabs();
-  createQrMenu();
+  syncQrMenu();
   syncBadge();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  createQrMenu();
+  syncQrMenu();
   syncBadge();
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.settings) syncBadge();
+  if (area !== 'local' || !changes.settings) return;
+  syncBadge();
+  const was = isEnabled(changes.settings.oldValue);
+  if (was !== isEnabled(changes.settings.newValue)) syncQrMenu();
 });
 
 // --- QR codes ---------------------------------------------------------------
@@ -134,12 +152,13 @@ function grabFromPage(tabId, frameId) {
 }
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId !== 'sy-qr' || !tab || tab.id == null) return;
+  if ((info.menuItemId !== 'sy-qr' && info.menuItemId !== 'sy-qr-page') || !tab || tab.id == null) return;
   const frameId = info.frameId || 0;
   const msg = { type: 'sy-qr', text: null, error: false };
   try {
     const png = await grabFromPage(tab.id, frameId);
-    if (png) {
+    if (typeof png === 'string' && png.startsWith('data:image/png;base64,')) {
+      // Only an inline PNG is accepted from the page: never an address to fetch.
       msg.text = await decodeQr(png);
     } else if (isFetchableImageUrl(info.srcUrl)) {
       // Cross-origin image the page could not read back: fetch it anonymously.
@@ -151,6 +170,38 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     msg.error = true;
   }
   chrome.tabs.sendMessage(tab.id, msg, { frameId }, () => void chrome.runtime.lastError);
+});
+
+// --- Daily counter ----------------------------------------------------------
+// Daily buckets { 'YYYY-MM-DD': [spotted, blocked] }, kept 30 days. Every frame
+// of every tab reports here and updates run one after another, so no count is lost.
+
+let statsQueue = Promise.resolve();
+
+async function bumpStat(index) {
+  const day = new Date().toISOString().slice(0, 10);
+  const { stats = {} } = await chrome.storage.local.get('stats');
+  stats[day] = stats[day] || [0, 0];
+  stats[day][index]++;
+  const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  Object.keys(stats).forEach((d) => { if (d < cutoff) delete stats[d]; });
+  await chrome.storage.local.set({ stats });
+}
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (!msg) return;
+  if (msg.type === 'sy-qr-target') {
+    // The image entry never moves. The other one shows only on a drawn QR code, where
+    // Chrome sees no image: the two never match the same right-click.
+    if (msg.drawn) {
+      chrome.contextMenus.create({ id: 'sy-qr-page', title: ShowYourselfI18n.t('qr.menu'), contexts: ['all'] }, ignoreError);
+    } else {
+      chrome.contextMenus.remove('sy-qr-page', ignoreError);
+    }
+    return;
+  }
+  if (msg.type !== 'sy-stat' || (msg.index !== 0 && msg.index !== 1)) return;
+  statsQueue = statsQueue.then(() => bumpStat(msg.index)).catch(() => {});
 });
 
 // --- Disguised downloads ----------------------------------------------------
@@ -170,6 +221,26 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
       return;
     }
     const query = new URLSearchParams({ id: String(item.id), name: result.name });
-    chrome.tabs.create({ url: chrome.runtime.getURL('file-warning.html') + '?' + query });
+    chrome.tabs.create({ url: chrome.runtime.getURL('file-warning.html') + '?' + query }, (tab) => {
+      if (chrome.runtime.lastError || !tab) {
+        // No warning could be shown (no window open…): never leave the download stuck.
+        chrome.downloads.resume(item.id, ignoreError);
+        return;
+      }
+      chrome.storage.session.set({ ['fw' + tab.id]: item.id });
+    });
+  });
+});
+
+// We warn, we never block: if the warning tab is closed without a choice, the
+// download resumes. The tab clears its entry once Keep or Delete is clicked.
+// Session storage because the service worker may restart in between.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  const key = 'fw' + tabId;
+  chrome.storage.session.get(key, (data) => {
+    const id = data[key];
+    if (id == null) return;
+    chrome.storage.session.remove(key);
+    chrome.downloads.resume(id, () => void chrome.runtime.lastError);
   });
 });

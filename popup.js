@@ -142,6 +142,7 @@ store.get(['stats', 'settings', 'trusted'], (data) => {
   renderTrusted(data.trusted);
   setEnabledUI(!data.settings || data.settings.enabled !== false);
   setBubbleUI((data.settings && data.settings.bubble) || 'all');
+  setSpeedUI((data.settings && data.settings.speed) || 'normal');
   $('blockClicks').checked = !data.settings || data.settings.blockClicks !== false;
 });
 
@@ -153,7 +154,6 @@ function saveSetting(patch) {
 
 function setEnabledUI(on) {
   $('enabled').checked = on;
-  $('enabledHelp').textContent = t(on ? 'p.enabledOn' : 'p.enabledOff');
   $('settingsBody').classList.toggle('off', !on);
 }
 
@@ -164,8 +164,19 @@ $('enabled').addEventListener('change', (event) => {
 
 function setBubbleUI(mode) {
   document.querySelectorAll('input[name="bubble"]').forEach((r) => { r.checked = r.value === mode; });
-  $('bubbleHelp').textContent = t('p.bubbleHelp.' + mode);
+  $('speedSeg').classList.toggle('off', mode === 'off'); // no bubble, no speed
 }
+
+function setSpeedUI(speed) {
+  document.querySelectorAll('input[name="speed"]').forEach((r) => { r.checked = r.value === speed; });
+}
+
+document.querySelectorAll('input[name="speed"]').forEach((radio) => {
+  radio.addEventListener('change', () => {
+    setSpeedUI(radio.value);
+    saveSetting({ speed: radio.value });
+  });
+});
 
 document.querySelectorAll('input[name="bubble"]').forEach((radio) => {
   radio.addEventListener('change', () => {

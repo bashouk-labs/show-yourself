@@ -46,7 +46,11 @@
   };
 
   // Demo pages (welcome page, test page): "Go anyway" never navigates.
-  const IS_DEMO = !!document.querySelector('meta[name="show-yourself-test-page"], meta[name="show-yourself-demo"]');
+  // Only our own pages and local files count: a website cannot pass itself off as a demo.
+  const IS_LOCAL_PAGE = location.protocol === 'chrome-extension:' || location.protocol === 'file:' ||
+    location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+  const IS_DEMO = IS_LOCAL_PAGE &&
+    !!document.querySelector('meta[name="show-yourself-test-page"], meta[name="show-yourself-demo"]');
 
   // The local test page (file://) loads a fallback copy unless told the
   // extension is there. Limited to file:// so websites cannot detect us.
@@ -55,7 +59,7 @@
   }
 
   // --- CONFIGURATION ---
-  const DEBOUNCE_MS = 150;
+  const SPEED_MS = { fast: 150, normal: 400, slow: 650 }; // hover time before the bubble opens
   const HIDE_DELAY_MS = 260;     // time to travel from the link to the bubble
   const VIEWPORT_MARGIN = 8;
   const GAP = 8;
@@ -64,12 +68,16 @@
   const WAVE_LIFT_PX = 4;        // the focused letter also rises a bit
   const DOMAIN_FONT_PX = 18;     // base size of the domain in the bubble
   const DOMAIN_MIN_FONT_PX = 12; // long domains shrink down to this size
+  const COMPACT_FONT_PX = 14;    // the discreet first line: real address + verdict, no magnifier
+  const EXPAND_DELAY_MS = 220;   // pointer resting on the line before it opens into the magnifier
   const FONT_FAMILY = 'ShowYourselfMono';
   const MONO_STACK = `"${FONT_FAMILY}", "Atkinson Hyperlegible Mono", "JetBrains Mono", "Cascadia Mono", Consolas, Menlo, monospace`;
 
   // --- STATE ---
   let hoverTimer = null;
   let hideTimer = null;
+  let expandTimer = null;
+  let sideAbove = null;      // side of the link the bubble opened on; kept while it grows
   let activeAnchor = null;
   let activeResult = null;
   let expanded = false;
@@ -91,8 +99,10 @@
   const storage = (() => {
     try { return chrome.storage && chrome.storage.local ? chrome.storage.local : null; } catch (e) { return null; }
   })();
-  /** bubble: 'all' | 'risky' | 'off' */
-  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'all' };
+  /** bubble: 'all' | 'risky' | 'off'; speed: 'fast' | 'normal' | 'slow' */
+  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'all', speed: 'normal' };
+  // Escape hides the bubble on this page until it is reloaded (red links still show).
+  let pausedForPage = false;
   let settings = Object.assign({}, DEFAULT_SETTINGS);
   const isOn = () => alive && settings.enabled !== false;
   let trusted = new Set();
@@ -116,7 +126,9 @@
   /** A site the user said they know: only softens non-danger verdicts. */
   function isTrusted(result) {
     if (!result.host) return false;
-    return result.severity !== 'danger' && !result.host.isIP && trusted.has(result.host.registrableAscii);
+    if (result.severity === 'danger' || result.host.isIP || !trusted.has(result.host.registrableAscii)) return false;
+    // A trusted site that forwards to a site the user does not know is still worth showing.
+    return !result.findings.some((f) => f.kind === 'redirect' && !trusted.has(f.target));
   }
 
   function setTrusted(domain, value) {
@@ -125,18 +137,12 @@
     storage.set({ trusted: Array.from(trusted).sort() });
   }
 
-  /** Daily buckets { 'YYYY-MM-DD': [spotted, blocked] }, kept 30 days. */
+  /** Counted by the service worker: one writer, so frames and tabs never overwrite each other. */
   function recordStat(index) {
     if (!storage) return;
-    const day = new Date().toISOString().slice(0, 10);
-    storage.get('stats', (data) => {
-      const stats = data.stats || {};
-      stats[day] = stats[day] || [0, 0];
-      stats[day][index]++;
-      const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-      Object.keys(stats).forEach((d) => { if (d < cutoff) delete stats[d]; });
-      storage.set({ stats });
-    });
+    try {
+      chrome.runtime.sendMessage({ type: 'sy-stat', index }, () => void chrome.runtime.lastError);
+    } catch (e) { /* extension reloaded: this old script can no longer talk to it */ }
   }
 
   // --- FONT: Atkinson Hyperlegible Mono (Braille Institute, SIL OFL) ---
@@ -213,6 +219,11 @@
     .sy-bubble.sy-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .sy-bubble.sy-below { transform-origin: 50% 0%; }
     .sy-bubble.sy-expanded { border-radius: 16px; padding: 10px 14px 10px; cursor: default; }
+    /* First step: one thin line. The magnifier and the inspector come with the details. */
+    .sy-bubble:not(.sy-expanded) { padding: 4px 10px 4px 9px; }
+    .sy-bubble:not(.sy-expanded) .sy-inspector { display: none; }
+    .sy-bubble:not(.sy-expanded) .sy-domain { min-height: 0; font-weight: 700; }
+    .sy-bubble:not(.sy-expanded) .sy-ch { margin: 0 0.03em; }
     .sy-bubble.sy-official { --tint: 34, 197, 94; }
     .sy-bubble.sy-caution  { --tint: 245, 158, 11; }
     .sy-bubble.sy-danger   { --tint: 239, 68, 68; }
@@ -448,14 +459,22 @@
     shadow.appendChild(tooltip);
     document.documentElement.appendChild(hostElement);
 
-    tooltip.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    tooltip.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimer);
+      // Resting on the line asks for more: it opens into the magnifier.
+      clearTimeout(expandTimer);
+      expandTimer = setTimeout(() => setExpanded(true), EXPAND_DELAY_MS);
+    });
     tooltip.addEventListener('mouseleave', () => {
+      clearTimeout(expandTimer);
+      if (pinned) return;
       clearTimeout(hideTimer);
       hideTimer = setTimeout(hide, HIDE_DELAY_MS);
     });
     tooltip.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      clearTimeout(expandTimer);
       setExpanded(!expanded);
     });
   }
@@ -562,7 +581,8 @@
     else if (result.sender) renderWave(result.host.labels, domain, result.sender.email.split('@')[0] + '@');
     else renderWave(regLabels, domain);
     const len = Math.max(1, waveChars.length);
-    domain.style.fontSize = Math.max(DOMAIN_MIN_FONT_PX, Math.min(DOMAIN_FONT_PX, DOMAIN_FONT_PX * 18 / len)) + 'px';
+    const basePx = expanded ? DOMAIN_FONT_PX : COMPACT_FONT_PX;
+    domain.style.fontSize = Math.max(DOMAIN_MIN_FONT_PX, Math.min(basePx, basePx * 24 / len)) + 'px';
     row.appendChild(domain);
     const verdict = el('span', 'sy-verdict', verdictText(result));
     verdict.title = result.official ? t('ui.officialTitle', { name: result.official.name }) : '';
@@ -652,11 +672,17 @@
     const natural = tooltip.offsetWidth;
     const fontPx = parseFloat(domain.style.fontSize) || DOMAIN_FONT_PX;
     const vw = document.documentElement.clientWidth || window.innerWidth;
-    tooltip.style.width = Math.min(natural + Math.round(fontPx * 4), vw - 2 * VIEWPORT_MARGIN) + 'px';
+    tooltip.style.width = Math.min(natural + (expanded ? Math.round(fontPx * 4) : 0), vw - 2 * VIEWPORT_MARGIN) + 'px';
   }
 
   function setExpanded(value) {
     if (!activeResult || expanded === value) return;
+    // The bubble keeps its side only while the pointer rests on it (it must not slip away).
+    // Opened from the keyboard, it is free to move to the side with the most room.
+    const box = tooltip.getBoundingClientRect();
+    const onBubble = lastPointer && lastPointer.x >= box.left && lastPointer.x <= box.right &&
+      lastPointer.y >= box.top && lastPointer.y <= box.bottom;
+    if (!onBubble) sideAbove = null;
     expanded = value;
     render(activeResult);
     tooltip.classList.add('sy-visible');
@@ -702,7 +728,7 @@
    * the cursor; over the link → same relative position along the link.
    */
   function onPointerMove(event) {
-    if (!activeAnchor || !waveChars.length) return;
+    if (!activeAnchor || !expanded || !waveChars.length) return; // the wave belongs to the magnifier
     pendingPointer = { x: event.clientX, y: event.clientY };
     if (waveFrame) return;
     waveFrame = requestAnimationFrame(() => {
@@ -754,7 +780,10 @@
 
     const fitsAbove = a.top >= t.height + room + GAP + VIEWPORT_MARGIN;
     const fitsBelow = vh - a.bottom >= t.height + room + GAP + VIEWPORT_MARGIN;
-    const above = fitsAbove || (!fitsBelow && a.top > vh - a.bottom);
+    // Once open on one side it stays there: growing into the magnifier must not make it jump
+    // away from the pointer resting on it. The viewport clamp below keeps it fully visible.
+    const above = sideAbove !== null ? sideAbove : fitsAbove || (!fitsBelow && a.top > vh - a.bottom);
+    sideAbove = above;
     let top = above ? a.top - t.height - GAP : a.bottom + GAP;
     top = Math.max(VIEWPORT_MARGIN, Math.min(top, vh - t.height - VIEWPORT_MARGIN));
     tooltip.classList.toggle('sy-below', !above);
@@ -771,9 +800,11 @@
   function refreshPage() {
     if (!isOn()) { hide(); closeBlocker(); clearOutlines(); return; }
     if (activeAnchor) {
+      // A pinned bubble (QR code) cannot be rebuilt from its anchor, an image: keep its result.
       const anchor = activeAnchor;
+      const preset = pinned ? activeResult : null;
       hide();
-      show(anchor);
+      show(anchor, preset);
     }
     clearOutlines();
     if (scanTimer) clearTimeout(scanTimer);
@@ -787,6 +818,9 @@
     if (settings.bubble === 'off') return false;
     // A trusted destination stays silent in every mode (danger is never trusted).
     if (isTrusted(result)) return false;
+    if (pausedForPage && result.severity !== 'danger') return false;
+    // Links that stay on the same site are silent unless something is wrong.
+    if (Analyzer.isSameSite && Analyzer.isSameSite(result, location.hostname)) return false;
     if (settings.bubble === 'risky') return result.severity !== 'none' && !result.official;
     return true;
   }
@@ -809,7 +843,8 @@
     pinned = Boolean(preset);
     activeAnchor = anchor;
     activeResult = result;
-    expanded = false;
+    sideAbove = null;
+    expanded = Boolean(preset); // asked for explicitly (QR code): straight to the magnifier
     render(result);
     position(anchor);
     if (lastPointer) onPointerMove({ clientX: lastPointer.x, clientY: lastPointer.y });
@@ -820,6 +855,8 @@
 
   function hide() {
     pinned = false;
+    sideAbove = null;
+    clearTimeout(expandTimer);
     clearTimeout(hoverTimer);
     hoverTimer = null;
     activeAnchor = null;
@@ -949,9 +986,43 @@
   // Right-click an image → the background decodes it (jsQR) → the decoded link
   // is shown in a pinned bubble.
   let lastContextTarget = null;
-  on(document, 'contextmenu', (event) => {
+  const QR_MIN_DRAWN_PX = 60;
+  const QR_MENU_RESET_MS = 800; // well after the menu has opened: Chrome reads the entries at that moment
+  let qrMenuReset = null;
+
+  /**
+   * A canvas or inline SVG big and square enough to be a QR code (not an icon).
+   * A picture inside an SVG (<image>) is left out: Chrome already treats it as an image,
+   * so the image entry shows by itself.
+   */
+  function drawnQrCandidate(node) {
+    if (!node || node.closest('img') || node.localName === 'image') return false;
+    const drawn = node.closest('canvas, svg');
+    if (!drawn) return false;
+    const r = drawn.getBoundingClientRect();
+    return r.width >= QR_MIN_DRAWN_PX && r.height >= QR_MIN_DRAWN_PX && r.width / r.height > 0.8 && r.width / r.height < 1.25;
+  }
+
+  // Chrome only offers "image" menu entries on <img>. For a drawn QR code the
+  // background is told before the menu opens, and shows its page entry instead.
+  function noteContextTarget(event) {
     lastContextTarget = event.target instanceof Element ? event.target : null;
-  }, { capture: true, passive: true });
+    if (!isOn() || !Features || !Features.isOn('qrCode')) return;
+    const tell = (drawn) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'sy-qr-target', drawn }, () => void chrome.runtime.lastError);
+      } catch (e) { /* test page, or extension reloaded */ }
+    };
+    const drawn = drawnQrCandidate(lastContextTarget);
+    tell(drawn);
+    // Once the menu is open, go back to the image entry alone. Left as is, the next
+    // right-click on a picture would find two entries and Chrome would fold them into a submenu.
+    clearTimeout(qrMenuReset);
+    if (drawn) qrMenuReset = setTimeout(() => tell(false), QR_MENU_RESET_MS);
+  }
+  // mousedown comes first and leaves the background more time; contextmenu covers the keyboard.
+  on(document, 'mousedown', (event) => { if (event.button === 2) noteContextTarget(event); }, { capture: true, passive: true });
+  on(document, 'contextmenu', noteContextTarget, { capture: true, passive: true });
 
   let qrNote = null;
   function showQrNote(anchor, text) {
@@ -979,11 +1050,17 @@
     show(anchor, result);
   }
 
+  const QR_MAX_SIDE_PX = 1600; // same cap as the service worker
+
   /** Draws the right-clicked image (img, inline SVG or canvas) into a PNG data URL. */
   function grabImage(node) {
     return new Promise((resolve) => {
-      const toPng = (source, w, h) => {
+      const toPng = (source, sw, sh) => {
         try {
+          // Huge pictures are shrunk first: a QR code needs far less, and the PNG is sent to the worker.
+          const k = Math.min(1, QR_MAX_SIDE_PX / Math.max(sw, sh));
+          const w = Math.max(1, Math.round(sw * k));
+          const h = Math.max(1, Math.round(sh * k));
           const c = document.createElement('canvas');
           c.width = w; c.height = h;
           const ctx = c.getContext('2d');
@@ -995,7 +1072,7 @@
       };
       if (!node) return resolve(null);
       const canvas = node.closest('canvas');
-      if (canvas) { try { return resolve(canvas.toDataURL('image/png')); } catch (e) { return resolve(null); } }
+      if (canvas) return canvas.width && canvas.height ? toPng(canvas, canvas.width, canvas.height) : resolve(null);
       const svg = node.closest('svg');
       const img = node.closest('img');
       if (img) {
@@ -1139,7 +1216,7 @@
     clearTimeout(hideTimer);
     if (anchor === activeAnchor) return;
     clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => show(anchor), DEBOUNCE_MS);
+    hoverTimer = setTimeout(() => show(anchor), SPEED_MS[settings.speed] || SPEED_MS.normal);
   }, { passive: true, capture: true });
 
   on(document, 'mousemove', (event) => {
@@ -1192,7 +1269,10 @@
   on(document, 'keydown', (event) => {
     if (blocker) { if (event.key === 'Escape') closeBlocker(); return; }
     if (!activeAnchor) return;
-    if (event.key === 'Escape') hide();
+    if (event.key === 'Escape') {
+      if (!pinned) pausedForPage = true; // a QR bubble just closes
+      hide();
+    }
     else if (event.key === 'Shift' && !event.repeat) setExpanded(!expanded);
   }, { passive: true });
 })();

@@ -41,19 +41,27 @@ function done(msg) {
   $('del').disabled = $('keep').disabled = true;
 }
 
+// A choice was made: forget this tab first, so closing it no longer resumes the download.
+function decided(next) {
+  chrome.tabs.getCurrent((tab) => {
+    if (!tab) return next();
+    chrome.storage.session.remove('fw' + tab.id, next);
+  });
+}
+
 $('del').onclick = () => {
   if (!hasApi) return done(t('deleted'));
-  chrome.downloads.search({ id }, ([item]) => {
+  decided(() => chrome.downloads.search({ id }, ([item]) => {
     const erase = () => chrome.downloads.erase({ id }, () => done(t('deleted')));
     if (!item) return done(t('deleted'));
     if (item.state === 'complete') chrome.downloads.removeFile(id, () => { void chrome.runtime.lastError; erase(); });
     else chrome.downloads.cancel(id, erase);
-  });
+  }));
 };
 
 $('keep').onclick = () => {
   if (!hasApi) return done(t('kept'));
-  chrome.downloads.resume(id, () => { void chrome.runtime.lastError; done(t('kept')); });
+  decided(() => chrome.downloads.resume(id, () => { void chrome.runtime.lastError; done(t('kept')); }));
 };
 
 $('del').focus();

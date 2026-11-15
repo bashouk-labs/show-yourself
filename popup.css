@@ -108,4 +108,6 @@ footer a { color: #86efac; font-weight: 700; }
 
 .master { border-color: rgba(34,197,94,0.45); }
 #settingsBody { transition: opacity .15s; }
+.seg.off { opacity: .4; pointer-events: none; filter: grayscale(1); }
+.seg + h2 { margin-top: 14px; }
 #settingsBody.off { opacity: .4; pointer-events: none; filter: grayscale(1); }

@@ -168,5 +168,54 @@ check('en: describeChar cyrillic', analyzer.describeChar('Ó').text === 'FAKE â€
 check('en: no missing key', !JSON.stringify(analyzeLink('https://xn--80ak6aa92e.com/', 'paypal.com')).match(/"(f|c|script)\.[a-zA-Z.]+"/));
 I18n.setLang('fr');
 
+// Same-site links stay silent (v1.2.1)
+const same = analyzer.isSameSite;
+check('same site: google -> google', same(analyzeLink('https://www.google.com/maps', ''), 'www.google.com'));
+check('same site: subdomain', same(analyzeLink('https://mail.google.com/', ''), 'www.google.com'));
+check('same site: co.uk', same(analyzeLink('https://www.amazon.co.uk/gp', ''), 'amazon.co.uk'));
+check('other site: google -> youtube', !same(analyzeLink('https://www.youtube.com/', ''), 'www.google.com'));
+check('other site: amazon.fr vs amazon.com', !same(analyzeLink('https://www.amazon.com/', ''), 'www.amazon.fr'));
+check('hosting: github.io neighbours differ', !same(analyzeLink('https://evil.github.io/', ''), 'me.github.io'));
+check('same site but warning still shows', !same(analyzeLink('https://www.google.com/url?q=https://rnicr0soft.com/', ''), 'www.google.com'));
+check('lookalike on own domain still shows', !same(analyzeLink('https://xn--80ak6aa92e.com/', ''), 'xn--80ak6aa92e.com'));
+check('IP page never same site', !same(analyzeLink('http://192.168.1.1/admin', ''), '192.168.1.1'));
+check('empty page host (file://)', !same(analyzeLink('https://example.com/', ''), ''));
+check('null result', !same(null, 'example.com'));
+
+// --- Public Suffix List ------------------------------------------------------
+check('psl: eu.org neighbours differ', _internal.splitHost('foo.eu.org').registrable === 'foo.eu.org');
+check('psl: uk.com', _internal.splitHost('www.shop.uk.com').registrable === 'shop.uk.com');
+check('psl: wildcard *.ck', _internal.splitHost('a.b.co.ck').registrable === 'b.co.ck');
+check('psl: exception !www.ck', _internal.splitHost('www.ck').registrable === 'www.ck');
+check('psl: plain .com unchanged', _internal.splitHost('a.b.example.com').registrable === 'example.com');
+check('psl: official domain that is a suffix', analyzeLink('https://raw.githubusercontent.com/a/b', '').severity === 'none');
+
+// --- Brand names that are also everyday words --------------------------------
+function level(href) { const r = analyzeLink(href, ''); return r ? r.severity : 'null'; }
+['https://apple-pie.com/', 'https://orange-county.com/', 'https://chase-the-sun.com/', 'https://zoom-photo.fr/',
+  'https://the-ledger.com/', 'https://my-ups.com/'].forEach((href) => {
+  check('everyday word is not a trap: ' + href, level(href) === 'caution', level(href));
+});
+['https://apple-login.com/', 'https://orange-service-client.com/', 'https://ups-tracking.com/',
+  'https://apple.com.evil-site.fr/', 'https://paypal-login.com/'].forEach((href) => {
+  check('bait word keeps the trap: ' + href, level(href) === 'danger', level(href));
+});
+
+// --- Sender display names: whole words ---------------------------------------
+function sender(email, name) { const r = analyzer.analyzeSender(email, name); return r ? r.severity : 'null'; }
+[['bob@gmail.com', 'Purchase Department'], ['bob@gmail.com', 'Pineapple Studio'], ['amy@outlook.com', 'Zoomalia'],
+  ['x@gmail.com', 'Orange County Library'], ['chase@gmail.com', 'Chase Williams'], ['info@amazon.fr', 'Amazon']].forEach((p) => {
+  check('sender clean: ' + p[1], sender(p[0], p[1]) === 'none', sender(p[0], p[1]));
+});
+[['x@gmail.com', 'DHL Express'], ['x@gmail.com', 'UPS Delivery'], ['x@gmail.com', 'PayPal Support'], ['x@gmail.com', 'Apple'],
+  ['x@gmail.com', 'Apple Support'], ['x@gmail.com', 'La Banque Postale'], ['x@gmail.com', 'PayPalSupport']].forEach((p) => {
+  check('sender trap: ' + p[1], sender(p[0], p[1]) === 'danger', sender(p[0], p[1]));
+});
+check('sender caution: SFR from unknown domain', sender('x@evil-site.ru', 'SFR Facture') === 'caution');
+
+// --- Redirect findings carry their target (trusted sites keep showing them) ---
+r = analyzeLink('https://www.google.com/x?redirect=https://evil-site.com/', '');
+check('redirect target exposed', r && r.findings.some((f) => f.kind === 'redirect' && f.target === 'evil-site.com'), summary(r));
+
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

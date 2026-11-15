@@ -20,6 +20,7 @@ CLAUDE.local.md
 *.zip
 dist/
 build/
+store/show-yourself-*/
 
 # --- Dependencies / caches --------------------------------------------------
 node_modules/

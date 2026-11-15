@@ -1,4 +1,4 @@
 {
-  "extName": { "message": "Show Yourself: Anti-Phishing Link Inspector" },
-  "extDesc": { "message": "Révèle la vraie destination des liens, la vraie adresse des expéditeurs et les fichiers déguisés. Lecture QR. 100 % local." }
+  "extName": { "message": "Show Yourself : anti-phishing, vérificateur de liens" },
+  "extDesc": { "message": "Anti-arnaque : révèle la vraie destination des liens, la vraie adresse des expéditeurs et les fichiers déguisés. QR. 100 % local." }
 }

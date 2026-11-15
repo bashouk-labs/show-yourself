@@ -50,3 +50,7 @@ h2 { text-align: center; color: #fde68a; font-size: 20px; margin: 8px 0 16px; }
 .tip, .privacy { text-align: center; margin: 28px auto 0; max-width: 620px; font-size: 14px; }
 .tip { color: #fde68a; }
 .privacy { color: #86efac; margin-top: 8px; }
+.good { list-style: none; padding: 0; margin: 0 auto; max-width: 620px; display: grid; gap: 8px; }
+.good li { font-size: 14px; color: #cbd5e1; padding-left: 22px; position: relative; }
+.good li::before { content: "✓"; position: absolute; left: 0; color: #22c55e; font-weight: 700; }
+.demos + h2 { margin-top: 36px; }

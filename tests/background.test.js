@@ -14,10 +14,11 @@ const sandbox = {
   URL,
   importScripts: noop,
   chrome: {
-    runtime: { onInstalled: listener, onStartup: listener },
+    runtime: { onInstalled: listener, onStartup: listener, onMessage: listener },
     storage: { onChanged: listener, local: { get: noop } },
     contextMenus: { onClicked: listener },
     downloads: { onDeterminingFilename: listener },
+    tabs: { onRemoved: listener },
   },
 };
 vm.createContext(sandbox);

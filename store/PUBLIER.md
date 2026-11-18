@@ -5,7 +5,7 @@ Console : https://chrome.google.com/webstore/devconsole
 
 | Élément | Statut | Fichier |
 |---|---|---|
-| Zip à envoyer | ✅ | `store/show-yourself-1.2.1.zip` (sans tests, test.html ni tools) |
+| Zip à envoyer | ✅ | `store/show-yourself-1.2.2.zip` (sans tests, test.html ni tools) |
 | Icône 128×128 | ✅ | `icons/icon-128.png` (déjà dans le zip) |
 | Captures 1280×800 | ✅ 5 FR + 5 EN, dans l'ordre ci-dessous | `store/screenshots/` |
 | Vignette promo 440×280 | ✅ FR + EN | `store/promo-440x280-*.png` |
@@ -21,7 +21,7 @@ Console : https://chrome.google.com/webstore/devconsole
 2. `sender` : L'expéditeur aussi.
 3. `file` : Et le « PDF » est un programme.
 4. `shady-site` : Un site louche ? (fausse adresse au début)
-5. `safe-site` : Un site normal ? Il le dit aussi.
+5. `safe-site` : Tous les liens, si vous voulez.
 
 La marque « ParcelGo » est inventée : on n'utilise aucune vraie marque (règle du Store sur les marques déposées).
 
@@ -78,7 +78,7 @@ A link that reads "parcelgo.com" but hides a Cyrillic "о". An email signed "ser
 Show Yourself doesn't guess whether a site is good or bad. It shows you the facts, so you can decide.
 
 🔗 LINKS
-• Hover any link: its real destination appears, letter by letter.
+• Hover a suspicious link: its real destination appears, letter by letter. Choose “Always” to see every link.
 • Look-alike letters from other alphabets are highlighted.
 • Hidden redirects (Outlook Safe Links, Google, trackers…) are unwrapped.
 • Slide along the link with the magnifier to inspect each character.
@@ -113,7 +113,7 @@ Un lien qui affiche « parcelgo.com » mais cache un « о » cyrillique. Un e-m
 Show Yourself ne devine pas si un site est bon ou mauvais. Il vous montre les faits, pour que vous décidiez.
 
 🔗 LIENS
-• Survolez un lien : sa vraie destination apparaît, lettre par lettre.
+• Survolez un lien suspect : sa vraie destination apparaît, lettre par lettre. Choisissez « Toujours » pour voir tous les liens.
 • Les lettres d'autres alphabets qui imitent les nôtres sont mises en évidence.
 • Les redirections cachées (Outlook Safe Links, Google, traqueurs…) sont dévoilées.
 • Glissez sur le lien avec la loupe pour inspecter chaque caractère.

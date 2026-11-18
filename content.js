@@ -100,7 +100,7 @@
     try { return chrome.storage && chrome.storage.local ? chrome.storage.local : null; } catch (e) { return null; }
   })();
   /** bubble: 'all' | 'risky' | 'off'; speed: 'fast' | 'normal' | 'slow' */
-  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'all', speed: 'normal' };
+  const DEFAULT_SETTINGS = { enabled: true, blockClicks: true, bubble: 'risky', speed: 'normal' };
   // Escape hides the bubble on this page until it is reloaded (red links still show).
   let pausedForPage = false;
   let settings = Object.assign({}, DEFAULT_SETTINGS);
@@ -816,6 +816,8 @@
   /** Applies the "show the magnifier" preference: always, if suspicious, never. */
   function wantsBubble(result) {
     if (settings.bubble === 'off') return false;
+    // On demo and test pages, always show so the user can test all scenarios.
+    if (IS_DEMO) return true;
     // A trusted destination stays silent in every mode (danger is never trusted).
     if (isTrusted(result)) return false;
     if (pausedForPage && result.severity !== 'danger') return false;

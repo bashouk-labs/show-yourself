@@ -111,3 +111,15 @@ footer a { color: #86efac; font-weight: 700; }
 .seg.off { opacity: .4; pointer-events: none; filter: grayscale(1); }
 .seg + h2 { margin-top: 14px; }
 #settingsBody.off { opacity: .4; pointer-events: none; filter: grayscale(1); }
+
+/* Thin scrollbar in the theme colors instead of the grey system one. */
+html, .chips { scrollbar-width: thin; scrollbar-color: rgba(134,239,172,0.35) transparent; }
+html:hover, .chips:hover { scrollbar-color: rgba(134,239,172,0.6) transparent; }
+
+/* Inside the welcome page: numbered settings, no footer. */
+.embedded [data-n]::before {
+  content: attr(data-n); display: inline-flex; width: 18px; height: 18px; margin-right: 7px;
+  border-radius: 50%; align-items: center; justify-content: center; vertical-align: 1px;
+  font-size: 11px; font-weight: 800; color: #3b2a06; background: linear-gradient(135deg, #fff1a8, #c99a38);
+}
+.embedded footer { display: none; }

@@ -1,6 +1,8 @@
 'use strict';
 const t = ShowYourselfI18n.t;
 ShowYourselfI18n.translatePage(document);
+// Shown inside the welcome page: number the settings to match its notes.
+if (window.top !== window) document.documentElement.classList.add('embedded');
 
 const store = chrome.storage.local;
 const $ = (id) => document.getElementById(id);
@@ -141,7 +143,7 @@ store.get(['stats', 'settings', 'trusted'], (data) => {
   renderStats(data.stats);
   renderTrusted(data.trusted);
   setEnabledUI(!data.settings || data.settings.enabled !== false);
-  setBubbleUI((data.settings && data.settings.bubble) || 'all');
+  setBubbleUI((data.settings && data.settings.bubble) || 'risky');
   setSpeedUI((data.settings && data.settings.speed) || 'normal');
   $('blockClicks').checked = !data.settings || data.settings.blockClicks !== false;
 });

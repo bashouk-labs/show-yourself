@@ -17,7 +17,7 @@
   <section class="card master">
     <label class="toggle">
       <span>
-        <strong data-i18n="p.enabled"></strong>
+        <strong data-n="1" data-i18n="p.enabled"></strong>
       </span>
       <input type="checkbox" id="enabled" checked />
       <i aria-hidden="true"></i>
@@ -32,13 +32,13 @@
   </section>
 
   <section class="card">
-    <h2 data-i18n="p.bubble"></h2>
+    <h2 data-n="2" data-i18n="p.bubble"></h2>
     <div class="seg" role="radiogroup">
       <label><input type="radio" name="bubble" value="all" /><span data-i18n="p.bubbleAll"></span></label>
-      <label><input type="radio" name="bubble" value="risky" /><span data-i18n="p.bubbleRisky"></span></label>
+      <label><input type="radio" name="bubble" value="risky" checked /><span data-i18n="p.bubbleRisky"></span></label>
       <label><input type="radio" name="bubble" value="off" /><span data-i18n="p.bubbleOff"></span></label>
     </div>
-    <h2 data-i18n="p.speed"></h2>
+    <h2 data-n="3" data-i18n="p.speed"></h2>
     <div class="seg" role="radiogroup" id="speedSeg">
       <label><input type="radio" name="speed" value="fast" /><span data-i18n="p.speedFast"></span></label>
       <label><input type="radio" name="speed" value="normal" /><span data-i18n="p.speedNormal"></span></label>
@@ -49,7 +49,7 @@
   <section class="card">
     <label class="toggle">
       <span>
-        <strong data-i18n="p.blockToggle"></strong>
+        <strong data-n="4" data-i18n="p.blockToggle"></strong>
       </span>
       <input type="checkbox" id="blockClicks" checked />
       <i aria-hidden="true"></i>
@@ -57,7 +57,7 @@
   </section>
 
   <section class="card">
-    <h2 data-i18n="p.trusted"></h2>
+    <h2 data-n="5" data-i18n="p.trusted"></h2>
     <form id="addForm" class="add">
       <input id="addInput" type="text" autocomplete="off" spellcheck="false" data-i18n-placeholder="p.addPlaceholder" />
       <button type="submit" data-i18n="p.add"></button>

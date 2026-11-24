@@ -8,10 +8,15 @@ import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+// With --post: portrait 1080x1350 images for social posts, in store/social.
+const POST = process.argv.includes('--post');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = path.join(ROOT, 'store/screenshots');
-const SCENES = ['link', 'sender', 'file', 'shady', 'safe'];
-const NAMES = { link: '1-link', sender: '2-sender', file: '3-file', shady: '4-shady-site', safe: '5-safe-site' };
+const OUT = path.join(ROOT, POST ? 'store/social' : 'store/screenshots');
+fs.mkdirSync(OUT, { recursive: true });
+// Each shot: scene name, optional view (post only), output file suffix.
+const SHOTS = POST
+  ? [['ms', 'compact', '1-red-compact'], ['ms', 'full', '2-red-details'], ['shady', 'compact', '3-yellow-compact']]
+  : [['link', '', '1-link'], ['sender', '', '2-sender'], ['file', '', '3-file'], ['shady', '', '4-shady-site'], ['safe', '', '5-safe-site']];
 const LANGS = ['en', 'fr'];
 
 const CHROME = process.env.CHROME || [
@@ -58,20 +63,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 try {
   for (const lang of LANGS) {
-    for (const scene of SCENES) {
+    for (const [scene, view, name] of SHOTS) {
       const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
       const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
-      await send('Emulation.setDeviceMetricsOverride', { width: 800, height: 500, deviceScaleFactor: 1.6, mobile: false }, sessionId);
+      await send('Emulation.setDeviceMetricsOverride', POST
+        ? { width: 480, height: 600, deviceScaleFactor: 2.25, mobile: false }
+        : { width: 800, height: 500, deviceScaleFactor: 1.6, mobile: false }, sessionId);
       await send('Emulation.setFocusEmulationEnabled', { enabled: true }, sessionId);
       await send('Page.enable', {}, sessionId);
-      await send('Page.navigate', { url: `${base}/store/screenshots/src/scene.html?scene=${scene}&lang=${lang}` }, sessionId);
+      await send('Page.navigate', { url: `${base}/store/screenshots/src/scene.html?scene=${scene}&lang=${lang}${POST ? '&fmt=post&view=' + view : ''}` }, sessionId);
       for (let i = 0; i < 100; i++) {
         const { result } = await send('Runtime.evaluate', { expression: 'document.title' }, sessionId);
         if (result.value === 'READY') break;
         await sleep(100);
       }
       const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
-      const out = path.join(OUT, `${lang}-${NAMES[scene]}.png`);
+      const out = path.join(OUT, `${lang}-${name}.png`);
       fs.writeFileSync(out, Buffer.from(data, 'base64'));
       console.log('wrote', path.relative(ROOT, out));
       await send('Target.closeTarget', { targetId });

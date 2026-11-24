@@ -6,7 +6,11 @@
  *  - Right-click an image → decode its QR code locally (jsQR).
  *  - Disguised downloads (invoice.pdf.exe…) are paused behind a warning tab.
  */
-importScripts('features.js', 'files.js', 'i18n.js', 'lib/jsQR.js');
+// Chrome, Edge and Safari run this file as a service worker. Firefox loads it
+// as an event page instead, with these helpers listed before it in its manifest.
+if (typeof importScripts === 'function') {
+  importScripts('features.js', 'files.js', 'i18n.js', 'lib/jsQR.js');
+}
 
 const CONTENT_FILES = ['features.js', 'i18n.js', 'files.js', 'lib/psl.js', 'analyzer.js', 'content.js'];
 const QR_MAX_SIDE_PX = 1600;
@@ -98,38 +102,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 // --- QR codes ---------------------------------------------------------------
 
-/**
- * True for addresses that must never be fetched on the page's behalf:
- * loopback, private networks, link-local and local-only names.
- */
-function isPrivateHost(hostname) {
-  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return true;
-  if (host.includes(':')) {
-    return host === '::' || host === '::1' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || host.startsWith('::ffff:');
-  }
-  const ip = host.split('.').map(Number);
-  if (ip.length !== 4 || ip.some((n) => !Number.isInteger(n))) return false;
-  const [a, b] = ip;
-  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
-}
+// Nothing is ever downloaded to read a QR code: no request can reach the
+// user's local network (router, printer…) on a page's behalf. The page draws
+// the picture itself; when it cannot (cross-origin image), the picture is cut
+// out of a screenshot of what the user already sees.
 
-/** Only public http(s) images or inline data: URLs may be fetched. */
-function isFetchableImageUrl(src) {
-  let url;
-  try { url = new URL(src); } catch (e) { return false; }
-  if (url.protocol === 'data:') return true;
-  return (url.protocol === 'https:' || url.protocol === 'http:') && !isPrivateHost(url.hostname);
-}
-
-async function decodeQr(src) {
-  // Cookies are never sent: the request must not act on the user's behalf.
-  const res = await fetch(src, { credentials: 'omit', redirect: 'error' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const blob = await res.blob();
-  if (blob.size > QR_MAX_BYTES) throw new Error('Image too large');
-  const bitmap = await createImageBitmap(blob);
+/** Decodes an inline image (data: URL), optionally cropped to `spot` (CSS px + device pixel ratio). */
+async function decodeQr(dataUrl, spot) {
+  if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) throw new Error('Not an inline image');
+  const blob = await (await fetch(dataUrl)).blob(); // data: URL, decoded locally
+  if (!spot && blob.size > QR_MAX_BYTES) throw new Error('Image too large');
+  const bitmap = spot
+    ? await createImageBitmap(blob, Math.round(spot.x * spot.dpr), Math.round(spot.y * spot.dpr),
+      Math.max(1, Math.round(spot.w * spot.dpr)), Math.max(1, Math.round(spot.h * spot.dpr)))
+    : await createImageBitmap(blob);
   const scale = Math.min(1, QR_MAX_SIDE_PX / Math.max(bitmap.width, bitmap.height));
   const w = Math.max(1, Math.round(bitmap.width * scale));
   const h = Math.max(1, Math.round(bitmap.height * scale));
@@ -141,12 +127,33 @@ async function decodeQr(src) {
   return code ? code.data : null;
 }
 
-/** Asks the page to draw the image itself (same rights as the page, no extra privilege). */
+/**
+ * Asks the page to draw the image itself (same rights as the page, no extra
+ * privilege). Replies { png } or, for a picture it cannot read, { spot }: where
+ * it sits on screen.
+ */
 function grabFromPage(tabId, frameId) {
   return new Promise((resolve) => {
     chrome.tabs.sendMessage(tabId, { type: 'sy-qr-grab' }, { frameId }, (reply) => {
       void chrome.runtime.lastError;
-      resolve(reply && reply.png);
+      resolve(reply || {});
+    });
+  });
+}
+
+/** A screen area sent by the page: finite numbers in sane ranges only. */
+function isValidSpot(s) {
+  const ok = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max;
+  return !!s && ok(s.x, 0, 20000) && ok(s.y, 0, 20000) && ok(s.w, 1, 20000) && ok(s.h, 1, 20000) && ok(s.dpr, 0.25, 10);
+}
+
+/** Screenshot of the visible part of the tab, as a PNG data URL. */
+function captureTab(windowId) {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
+      const err = chrome.runtime.lastError;
+      if (err || !dataUrl) reject(new Error(err ? err.message : 'No capture'));
+      else resolve(dataUrl);
     });
   });
 }
@@ -156,13 +163,15 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const frameId = info.frameId || 0;
   const msg = { type: 'sy-qr', text: null, error: false };
   try {
-    const png = await grabFromPage(tab.id, frameId);
-    if (typeof png === 'string' && png.startsWith('data:image/png;base64,')) {
+    const reply = await grabFromPage(tab.id, frameId);
+    if (typeof reply.png === 'string' && reply.png.startsWith('data:image/png;base64,')) {
       // Only an inline PNG is accepted from the page: never an address to fetch.
-      msg.text = await decodeQr(png);
-    } else if (isFetchableImageUrl(info.srcUrl)) {
-      // Cross-origin image the page could not read back: fetch it anonymously.
-      msg.text = await decodeQr(info.srcUrl);
+      msg.text = await decodeQr(reply.png);
+    } else if (frameId === 0 && isValidSpot(reply.spot)) {
+      // Cross-origin image the page could not read back: cut it out of the screen.
+      const current = await chrome.tabs.get(tab.id);
+      if (!current.active) throw new Error('Tab no longer visible');
+      msg.text = await decodeQr(await captureTab(tab.windowId), reply.spot);
     } else {
       msg.error = true;
     }
@@ -206,9 +215,8 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 // --- Disguised downloads ----------------------------------------------------
 
-chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  suggest(); // keep Chrome's name: we never rename silently
-  if (!ShowYourselfFeatures.isOn('fileGuard')) return;
+function guardDownload(item) {
+  if (!ShowYourselfFeatures.isOn('fileGuard') || !item.filename) return;
   const result = ShowYourselfFiles.analyze(item.filename);
   if (!result.danger) return;
 
@@ -230,7 +238,21 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
       chrome.storage.session.set({ ['fw' + tab.id]: item.id });
     });
   });
-});
+}
+
+// Chrome and Edge give the final name before the file is written. Firefox only
+// has onCreated, right after the download starts: a tiny file may finish first.
+// Safari has no downloads API: attachments and file links are still checked in pages.
+if (chrome.downloads) {
+  if (chrome.downloads.onDeterminingFilename) {
+    chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+      suggest(); // keep the browser's name: we never rename silently
+      guardDownload(item);
+    });
+  } else {
+    chrome.downloads.onCreated.addListener(guardDownload);
+  }
+}
 
 // We warn, we never block: if the warning tab is closed without a choice, the
 // download resumes. The tab clears its entry once Keep or Delete is clicked.

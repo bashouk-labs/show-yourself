@@ -148,7 +148,6 @@
       // Click blocker
       'block.title': 'Show Yourself a bloqué ce lien',
       'block.lead': 'Ce lien t’emmène vraiment sur :',
-      'block.why': 'Pourquoi ?',
       'block.back': 'Ne pas y aller',
       'block.go': 'Y aller quand même',
       'block.demo': 'Lien de démonstration : il ne mène nulle part. Bravo, tu as évité le piège !',
@@ -184,6 +183,8 @@
       'p.search': 'Chercher dans la liste…',
       'p.noMatch': 'Aucun site trouvé.',
       'p.welcome': 'Revoir la présentation',
+      'p.train': 'Repère les pièges en jouant',
+      'p.trainSub': 'Quiz gratuit sur showyourself.app',
       'p.privacy': '100 % local : rien ne quitte ton ordinateur.',
 
       // Welcome page
@@ -203,7 +204,7 @@
       'w.d2': 'Gérer mon identifiant Apple',
       'w.d2h': 'Ces lettres sont cyrilliques : ce n’est pas « apple ».',
       'w.d3': 'Espace sécurisé PayPal',
-      'w.d3h': 'Le vrai site est à la fin : pirate.fr.',
+      'w.d3h': 'Le vrai site est à la fin : verify-now.net.',
       'w.d4': 'Le vrai PayPal',
       'w.d4h': 'Pour comparer : la loupe devient verte.',
       'w.cfg': 'Tes réglages',
@@ -216,6 +217,8 @@
       'w.good': 'Bon à savoir',
       'w.g1': 'Les liens qui restent sur le même site (par exemple de google.com vers google.com) n’ouvrent pas la loupe, sauf s’ils cachent un piège.',
       'w.g2': 'Échap masque la loupe sur la page jusqu’à son rechargement. Les liens rouges s’affichent toujours.',
+      'w.train': 'Tu veux apprendre les techniques des hackers et t’entraîner à les repérer ?',
+      'w.trainGo': 'Joue gratuitement sur showyourself.app →',
       'w.pin': 'Astuce : épingle l’œil dans la barre de Chrome (icône puzzle 🧩) pour voir ton compteur et tes sites de confiance.',
       'w.privacy': '100 % local : aucun lien n’est envoyé sur Internet, aucune donnée n’est collectée.'
     },
@@ -350,7 +353,6 @@
 
       'block.title': 'Show Yourself blocked this link',
       'block.lead': 'This link really takes you to:',
-      'block.why': 'Why?',
       'block.back': 'Don’t go',
       'block.go': 'Go anyway',
       'block.demo': 'Demo link: it goes nowhere. Well done, you avoided the trap!',
@@ -385,6 +387,8 @@
       'p.search': 'Search the list…',
       'p.noMatch': 'No site found.',
       'p.welcome': 'See the introduction again',
+      'p.train': 'Practice spotting traps',
+      'p.trainSub': 'Free quiz on showyourself.app',
       'p.privacy': '100% local: nothing leaves your computer.',
 
       'w.title': 'Welcome! Links will finally show their true face.',
@@ -403,7 +407,7 @@
       'w.d2': 'Manage my Apple ID',
       'w.d2h': 'These letters are Cyrillic: this is not “apple”.',
       'w.d3': 'PayPal secure area',
-      'w.d3h': 'The real site is at the end: pirate.fr.',
+      'w.d3h': 'The real site is at the end: verify-now.net.',
       'w.d4': 'The real PayPal',
       'w.d4h': 'To compare: the magnifier turns green.',
       'w.cfg': 'Your settings',
@@ -416,6 +420,8 @@
       'w.good': 'Good to know',
       'w.g1': 'Links that stay on the same site (for example from google.com to google.com) don’t open the magnifier, unless they hide a trap.',
       'w.g2': 'Escape hides the magnifier on the page until it is reloaded. Red links always show.',
+      'w.train': 'Want to learn the tricks hackers use, and practice spotting them?',
+      'w.trainGo': 'Play for free on showyourself.app →',
       'w.pin': 'Tip: pin the eye to Chrome’s toolbar (puzzle icon 🧩) to see your counter and trusted sites.',
       'w.privacy': '100% local: no link is sent to the Internet, no data is collected.'
     },

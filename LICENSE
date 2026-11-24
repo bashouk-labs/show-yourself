@@ -29,3 +29,5 @@ Contact: contact@bashouk.com
 Third-party components keep their own licenses:
 - lib/jsQR.js: Apache License 2.0 (see lib/jsQR-LICENSE.txt)
 - fonts/AtkinsonHyperlegibleMono.ttf: SIL Open Font License 1.1 (see fonts/OFL.txt)
+- lib/psl.js: data from the Public Suffix List (https://publicsuffix.org),
+  Mozilla Public License 2.0 (https://mozilla.org/MPL/2.0/)

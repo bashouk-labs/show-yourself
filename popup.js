@@ -3,6 +3,11 @@ const t = ShowYourselfI18n.t;
 ShowYourselfI18n.translatePage(document);
 // Shown inside the welcome page: number the settings to match its notes.
 if (window.top !== window) document.documentElement.classList.add('embedded');
+// The training site opens in the same language as the extension.
+const trainLink = document.getElementById('trainLink');
+if (trainLink && ['fr', 'en'].includes(ShowYourselfI18n.getLang())) {
+  trainLink.href = 'https://showyourself.app/' + ShowYourselfI18n.getLang() + '/';
+}
 
 const store = chrome.storage.local;
 const $ = (id) => document.getElementById(id);

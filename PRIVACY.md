@@ -30,7 +30,9 @@ Show Yourself analyzes links **entirely on your computer**.
   (e.g. invoice.pdf.exe) is paused and you choose to delete or keep it. File contents
   are never read.
 - `contextMenus`: adds "reveal the QR code's link" to the right-click menu on images.
-  The image is decoded on your computer (bundled jsQR library); nothing is uploaded.
+  The image is decoded on your computer (bundled jsQR library); nothing is uploaded or downloaded.
+  For an image hosted by another site, the extension reads it from a screenshot of the visible tab,
+  taken only when you choose this menu item, kept in memory and never saved or sent.
   If the page does not let the extension read the image directly, the extension downloads
   that image again from its public address, without your cookies, to decode it. Local and
   private-network addresses are never contacted.
@@ -77,7 +79,9 @@ Show Yourself analyse les liens **entièrement sur votre ordinateur**.
   (ex. facture.pdf.exe) est mis en pause et vous choisissez de le supprimer ou de le garder.
   Le contenu des fichiers n'est jamais lu.
 - `contextMenus` : ajoute « révéler le lien du QR code » au clic droit sur une image.
-  L'image est décodée sur votre ordinateur (bibliothèque jsQR incluse) ; rien n'est envoyé.
+  L'image est décodée sur votre ordinateur (bibliothèque jsQR incluse) ; rien n'est envoyé ni téléchargé.
+  Pour une image hébergée par un autre site, l'extension la lit sur une capture de l'onglet visible,
+  prise uniquement quand vous choisissez ce menu, gardée en mémoire et jamais enregistrée ni envoyée.
   Si la page ne permet pas à l'extension de lire l'image directement, l'extension
   retélécharge cette image depuis son adresse publique, sans vos cookies, pour la décoder.
   Les adresses locales ou de réseau privé ne sont jamais contactées.

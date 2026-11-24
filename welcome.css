@@ -59,7 +59,8 @@ h2 { text-align: center; color: #fde68a; font-size: 20px; margin: 8px 0 16px; }
 .cfg-lead { text-align: center; max-width: 620px; margin: -6px auto 18px; font-size: 14px; color: #cbd5e1; }
 .cfg { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px; }
 #popupDemo {
-  width: 320px; height: 600px; border: 1px solid rgba(226,181,74,0.35); border-radius: 16px;
+  /* 320px popup + 2px of border (box-sizing: border-box), so it never scrolls sideways */
+  width: 322px; height: 600px; border: 1px solid rgba(226,181,74,0.35); border-radius: 16px;
   box-shadow: 0 18px 50px rgba(0,0,0,0.45); background: #06180f;
 }
 .cfg-notes { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 300px; }
@@ -69,3 +70,16 @@ h2 { text-align: center; color: #fde68a; font-size: 20px; margin: 8px 0 16px; }
   align-items: center; justify-content: center; font-size: 13px;
   background: linear-gradient(135deg, #fff1a8, #c99a38); color: #3b2a06;
 }
+
+/* Nod to the training site, between the settings and the closing tip */
+.train {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  max-width: 620px; margin: 44px auto 0; padding: 18px 22px; text-align: left;
+  border: 1px solid rgba(226,181,74,0.35); border-radius: 14px; text-decoration: none;
+  background: linear-gradient(135deg, rgba(255,241,168,0.06), rgba(201,154,56,0.10));
+  transition: border-color 0.15s, transform 0.15s;
+}
+.train:hover, .train:focus-visible { border-color: rgba(226,181,74,0.8); transform: translateY(-1px); }
+.train img { flex: none; border-radius: 12px; }
+.train-q { display: block; font-size: 15px; color: #e2e8f0; }
+.train-go { display: inline-block; margin-top: 6px; font-size: 14px; font-weight: 700; color: #f5d27a; }

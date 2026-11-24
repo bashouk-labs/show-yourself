@@ -35,6 +35,8 @@
     }
     .card.trap { border-top: 3px solid #ef4444; }
     .card.legit { border-top: 3px solid #64748b; }
+    .card.same { border-top: 3px solid #a78bfa; }
+    .page-host { font: 11px ui-monospace, Consolas, monospace; color: #64748b; margin-bottom: 6px; }
     .card h3 { margin: 0 0 4px; font-size: 15px; }
     .card p { margin: 0 0 12px; font-size: 13px; color: #94a3b8; }
     .card a {
@@ -77,6 +79,10 @@
     <p class="section-intro" data-en="If one of them turns orange or red, it is a bug (false alarm): please report it!">Si l'un d'eux passe en orange ou en rouge, c'est un bug (fausse alerte) : merci de le signaler !</p>
     <div class="grid" id="legit"></div>
 
+    <h2 data-en="🏠 Same site: a domain name is just a label">🏠 Même site : un nom de domaine n'est qu'une étiquette</h2>
+    <p class="section-intro" data-en="Each card pretends to be the page shown in grey (dashboard, registrar…). A button showing &lt;code&gt;bashouk.com&lt;/code&gt; that stays on that site must NOT warn.">Chaque carte se fait passer pour la page indiquée en gris (tableau de bord, registrar…). Un bouton qui affiche <code>bashouk.com</code> et reste sur ce site ne doit PAS alerter.</p>
+    <div class="grid" id="samesite"></div>
+
     <div class="notice" id="noticeFr">
       💡 <strong>Pour tester avec l'extension installée :</strong> dans <code>chrome://extensions</code>, ouvrez « Détails »
       de <em>Show Yourself</em> et activez <strong>« Autoriser l'accès aux URL de fichier »</strong>.
@@ -97,8 +103,8 @@
         'https://login.rnicr0soft.com/oauth2/v2.0/authorize?client_id=981273', 'Se connecter à Microsoft 365 (login.microsoft.com)', 'danger'],
       ['« I » majuscule au lieu de « l »', 'Le navigateur lit « paypai.com » : un faux PayPal.',
         'https://secu1e.paypaI.com/myaccount/summary', 'Vérifier mon compte PayPal', 'danger'],
-      ['Faux début d’adresse', 'Le vrai site est pirate.fr, tout le reste est du décor. En http en plus.',
-        'http://paypal.com.securite-client.pirate.fr/login/auth.php', 'Espace sécurisé PayPal', 'danger'],
+      ['Faux début d’adresse', 'Le vrai site est verify-now.net, tout le reste est du décor. En http en plus.',
+        'http://paypal.com.secure-login.verify-now.net/login/auth.php', 'Espace sécurisé PayPal', 'danger'],
       ['Alphabet cyrillique (Punycode)', '« аррӏе » est écrit avec des lettres cyrilliques.',
         'https://xn--80ak6aa92e.com/id/manage', 'Gérer mon identifiant Apple', 'danger'],
       ['Une seule lettre étrangère', 'Le « а » de pаypal est cyrillique, le reste est latin.',
@@ -106,9 +112,9 @@
       ['Le texte du lien ment', 'Le texte affiche paypal.com, le lien va ailleurs.',
         'https://compte-verification.net/paypal', 'https://www.paypal.com/signin', 'danger'],
       ['Piège « @ »', 'Tout ce qui est avant « @ » est ignoré : on va sur evil-site.com.',
-        'https://www.ameli.fr@evil-site.com/remboursement', 'Votre remboursement Ameli', 'danger'],
+        'https://www.netflix.com@evil-site.com/billing', 'Mettre à jour mon paiement Netflix', 'danger'],
       ['Redirection Outlook cachée', 'Outlook SafeLinks enveloppe le vrai lien. On le déballe.',
-        'https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fimpots-remboursement.fr%2Fdossier&data=05', 'Consulter mon dossier', 'danger'],
+        'https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fpaypal-refund-center.com%2Fclaim&data=05', 'Consulter mon remboursement', 'danger'],
       ['Hébergement gratuit', 'N’importe qui peut créer un site en .github.io.',
         'https://paypal-login-secure.github.io/', 'Connexion PayPal', 'danger'],
       ['Faute de frappe visuelle', '« steamcommunlty » : un l à la place du i.',
@@ -124,26 +130,44 @@
       ['Le vrai Google', 'Sous-domaine normal.', 'https://accounts.google.com/signin', 'Connexion Google', 'none'],
       ['Microsoft Learn', 'Contient « rn » (learn) : ne doit pas alerter.', 'https://learn.microsoft.com/fr-fr/', 'Documentation Microsoft', 'none'],
       ['Outlook', 'outlook.live.com appartient bien à Microsoft.', 'https://outlook.live.com/mail/', 'Ouvrir outlook.com', 'none'],
-      ['Wikipédia en français', '« fr. » au début n’est pas un piège.', 'https://fr.wikipedia.org/wiki/Hameçonnage', 'Hameçonnage · Wikipédia', 'none'],
-      ['Impôts', 'Site officiel de l’État.', 'https://www.impots.gouv.fr/accueil', 'Mon espace particulier', 'none'],
+      ['Wikipédia en anglais', '« en. » au début n’est pas un piège.', 'https://en.wikipedia.org/wiki/Phishing', 'Phishing · Wikipedia', 'none'],
+      ['Organisation internationale', 'Extension rare (.int), site légitime.', 'https://www.who.int/health-topics', 'Organisation mondiale de la santé', 'none'],
       ['Amazon UK', 'Extension en deux parties (.co.uk).', 'https://www.amazon.co.uk/gp/cart', 'Panier Amazon', 'none'],
       ['Yahoo Finance', '« finance » ressemble à « binance » mais n’est pas un piège.', 'https://finance.yahoo.com/', 'Yahoo Finance', 'none'],
       ['Domaine allemand accentué', 'Accents légitimes : simple information.', 'https://münchen.de/', 'Ville de Munich', 'none'],
       ['Domaine russe', 'Alphabet cyrillique légitime : simple information.', 'https://xn--h1alffa9f.xn--p1ai/', 'россия.рф', 'none'],
-      ['Redirection Facebook vers un vrai site', 'Déballée, mène au Monde.', 'https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.lemonde.fr%2F&h=AT0', 'lemonde.fr', 'none'],
+      ['Redirection Facebook vers un vrai site', 'Déballée, mène à la BBC.', 'https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.bbc.com%2Fnews&h=AT0', 'bbc.com', 'none'],
       ['GitHub Docs', 'Lien de référence propre.', 'https://docs.github.com/fr/authentication', 'Documentation GitHub (docs.github.com)', 'none']
+    ];
+
+    // Same-site cases: [title, explanation, href, link text, expected, simulated page host]
+    const SAMESITE = [
+      ['Cloudflare : mes domaines', 'Sur dash.cloudflare.com, le bouton « bashouk.com » ouvre la fiche du domaine, sur Cloudflare.',
+        'https://dash.cloudflare.com/8f2c41/bashouk.com/dns/records', 'bashouk.com', 'none', 'dash.cloudflare.com'],
+      ['Registrar : gestion du domaine', 'Sur namecheap.com, « mysite.com » ouvre la gestion du domaine, sur Namecheap.',
+        'https://ap.www.namecheap.com/domains/domaincontrolpanel/mysite.com/domain', 'mysite.com', 'none', 'ap.www.namecheap.com'],
+      ['Faux site qui écrit une marque', 'Un faux site affiche « paypal.com » sur un bouton vers lui-même : reste un piège.',
+        'https://www.phish-shop.com/login', 'paypal.com', 'danger', 'www.phish-shop.com'],
+      ['Le bouton part ailleurs', 'Sur Cloudflare, « bashouk.com » mène en fait à un autre site : reste un piège.',
+        'https://cloud-dash-login.com/bashouk.com', 'bashouk.com', 'danger', 'dash.cloudflare.com']
+    ];
+    const SAMESITE_EN = [
+      ['Cloudflare: my domains', 'On dash.cloudflare.com, the “bashouk.com” button opens the domain page, on Cloudflare.', 'bashouk.com'],
+      ['Registrar: domain settings', 'On namecheap.com, “mysite.com” opens the domain settings, on Namecheap.', 'mysite.com'],
+      ['Fake site showing a brand', 'A fake site shows “paypal.com” on a button to itself: still a trap.', 'paypal.com'],
+      ['The button goes elsewhere', 'On Cloudflare, “bashouk.com” actually leads to another site: still a trap.', 'bashouk.com']
     ];
 
     // English texts, same order as above: [title, explanation, link text]
     const TRAPS_EN = [
       ['"rn" instead of "m"', 'r + n side by side look like an m. A 0 replaces the o.', 'Sign in to Microsoft 365 (login.microsoft.com)'],
       ['Capital "I" instead of "l"', 'The browser reads "paypai.com": a fake PayPal.', 'Verify my PayPal account'],
-      ['Fake start of address', 'The real site is pirate.fr, the rest is decoration. And plain http.', 'PayPal secure area'],
+      ['Fake start of address', 'The real site is verify-now.net, the rest is decoration. And plain http.', 'PayPal secure area'],
       ['Cyrillic alphabet (Punycode)', '"аррӏе" is written with Cyrillic letters.', 'Manage my Apple ID'],
       ['One foreign letter', 'The "а" in pаypal is Cyrillic, the rest is Latin.', 'PayPal · Sign in'],
       ['The link text lies', 'The text shows paypal.com, the link goes elsewhere.', 'https://www.paypal.com/signin'],
-      ['"@" trap', 'Everything before "@" is ignored: you land on evil-site.com.', 'Your Ameli refund'],
-      ['Hidden Outlook redirect', 'Outlook SafeLinks wraps the real link. We unwrap it.', 'View my file'],
+      ['"@" trap', 'Everything before "@" is ignored: you land on evil-site.com.', 'Update my Netflix payment'],
+      ['Hidden Outlook redirect', 'Outlook SafeLinks wraps the real link. We unwrap it.', 'View my refund'],
       ['Free hosting', 'Anyone can create a site on .github.io.', 'PayPal sign in'],
       ['Visual typo', '"steamcommunlty": an l instead of an i.', 'Accept the Steam trade'],
       ['Short link', 'The destination is hidden behind bit.ly.', 'Track my parcel'],
@@ -154,13 +178,13 @@
       ['The real Google', 'Normal subdomain.', 'Google sign in'],
       ['Microsoft Learn', 'Contains "rn" (learn): must not warn.', 'Microsoft documentation'],
       ['Outlook', 'outlook.live.com really belongs to Microsoft.', 'Open outlook.com'],
-      ['French Wikipedia', '"fr." at the start is not a trap.', 'Hameçonnage · Wikipédia'],
-      ['French tax office', 'Official government site.', 'My personal space'],
+      ['English Wikipedia', '"en." at the start is not a trap.', 'Phishing · Wikipedia'],
+      ['International organization', 'Rare extension (.int), legitimate site.', 'World Health Organization'],
       ['Amazon UK', 'Two-part extension (.co.uk).', 'Amazon cart'],
       ['Yahoo Finance', '"finance" looks like "binance" but is not a trap.', 'Yahoo Finance'],
       ['German accented domain', 'Legitimate accents: information only.', 'City of Munich'],
       ['Russian domain', 'Legitimate Cyrillic alphabet: information only.', 'россия.рф'],
-      ['Facebook redirect to a real site', 'Unwrapped, it leads to Le Monde.', 'lemonde.fr'],
+      ['Facebook redirect to a real site', 'Unwrapped, it leads to the BBC.', 'bbc.com'],
       ['GitHub Docs', 'Clean reference link.', 'GitHub documentation (docs.github.com)']
     ];
     const qLang = new URLSearchParams(location.search).get('lang');
@@ -174,6 +198,7 @@
       const swap = (list, en) => list.forEach((c, i) => { c[0] = en[i][0]; c[1] = en[i][1]; c[3] = en[i][2]; });
       swap(TRAPS, TRAPS_EN);
       swap(LEGIT, LEGIT_EN);
+      swap(SAMESITE, SAMESITE_EN);
     }
 
     const EXPECT_TEXT = EN
@@ -182,9 +207,16 @@
 
     function addCards(containerId, cases, kind) {
       const container = document.getElementById(containerId);
-      cases.forEach(([title, explanation, href, text, expected]) => {
+      cases.forEach(([title, explanation, href, text, expected, pageHost]) => {
         const card = document.createElement('div');
         card.className = 'card ' + kind;
+        if (pageHost) {
+          card.setAttribute('data-sy-page-host', pageHost);
+          const host = document.createElement('div');
+          host.className = 'page-host';
+          host.textContent = (EN ? 'Simulated page: ' : 'Page simulée : ') + pageHost;
+          card.appendChild(host);
+        }
         const h3 = document.createElement('h3');
         h3.textContent = title;
         const p = document.createElement('p');
@@ -202,6 +234,7 @@
     }
     addCards('traps', TRAPS, 'trap');
     addCards('legit', LEGIT, 'legit');
+    addCards('samesite', SAMESITE, 'same');
 
     // Fallback: if the extension is not active on this page (file:// access not
     // allowed), load a local copy of the scripts so the page works right away.

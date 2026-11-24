@@ -914,7 +914,10 @@
     const href = typeof anchor.href === 'string' ? anchor.href : (anchor.href && anchor.href.baseVal);
     if (!href) return null;
     const text = (anchor.innerText || anchor.textContent || '') + ' ' + (anchor.getAttribute('title') || '');
-    return Analyzer.analyzeLink(href, text, document.baseURI);
+    // Local test pages can pretend to be another site (data-sy-page-host), to test same-site links.
+    const fake = IS_DEMO && anchor.closest && anchor.closest('[data-sy-page-host]');
+    const pageHost = fake ? fake.getAttribute('data-sy-page-host') : location.hostname;
+    return Analyzer.analyzeLink(href, text, document.baseURI, 0, pageHost);
   }
 
   /** Analyses an attachment, a sender or a link. */
@@ -1096,12 +1099,44 @@
     });
   }
 
+  /**
+   * Where a picture the page cannot read (cross-origin) sits on screen, in CSS
+   * px, so the background can cut it out of a screenshot. Top frame only: a
+   * frame does not know its own position on screen. Scrolls it into view if
+   * needed and hides our own bubble so it does not cover the picture.
+   */
+  function locateOnScreen(node) {
+    const img = node && node.closest('img');
+    if (!img || window.top !== window) return Promise.resolve(null);
+    hide();
+    if (qrNote) { qrNote.remove(); qrNote = null; }
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    const vh = document.documentElement.clientHeight || window.innerHeight;
+    const r0 = img.getBoundingClientRect();
+    if (r0.top < 0 || r0.left < 0 || r0.bottom > vh || r0.right > vw) {
+      img.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+    }
+    return new Promise((resolve) => {
+      // Two frames: the scroll and the hidden bubble are painted before the screenshot.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const r = img.getBoundingClientRect();
+        const x = Math.max(0, r.left);
+        const y = Math.max(0, r.top);
+        const w = Math.min(vw, r.right) - x;
+        const h = Math.min(vh, r.bottom) - y;
+        resolve(w >= 20 && h >= 20 ? { x, y, w, h, dpr: window.devicePixelRatio || 1 } : null);
+      }));
+    });
+  }
+
   try {
     chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (!alive || !msg) return undefined;
       if (msg.type === 'sy-qr') onQrResult(msg);
       if (msg.type === 'sy-qr-grab') {
-        grabImage(lastContextTarget).then((png) => sendResponse({ png }));
+        grabImage(lastContextTarget)
+          .then((png) => (png ? { png } : locateOnScreen(lastContextTarget).then((spot) => ({ spot }))))
+          .then(sendResponse, () => sendResponse({}));
         return true; // async response
       }
       return undefined;

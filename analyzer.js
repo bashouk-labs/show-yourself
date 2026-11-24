@@ -1003,9 +1003,11 @@
    * @param {string} href      Link target (absolute or relative)
    * @param {string} linkText  Visible text of the link (to detect "text says X, goes to Y")
    * @param {string} [baseURI] Base for relative links
+   * @param {number} [depth]   Internal recursion depth
+   * @param {string} [pageHost] Hostname of the page holding the link
    * @returns {object|null}    null when the link is not an http(s) web address
    */
-  function analyzeLink(href, linkText, baseURI, depth) {
+  function analyzeLink(href, linkText, baseURI, depth, pageHost) {
     depth = depth || 0;
     let url;
     try {
@@ -1019,7 +1021,7 @@
     if (depth < 3) {
       const wrapped = unwrapKnownRedirect(url);
       if (wrapped) {
-        const inner = analyzeLink(wrapped.href, linkText, null, depth + 1);
+        const inner = analyzeLink(wrapped.href, linkText, null, depth + 1, pageHost);
         if (inner) {
           inner.via.unshift({ host: url.hostname, service: wrapped.service });
           if (depth === 0) {
@@ -1095,11 +1097,15 @@
     // Visible text announces another site than the real destination
     const destGroups = officialGroupsOf(reg);
     const reported = new Set();
+    // A link that stays on the page's own site (dash.cloudflare.com listing
+    // "bashouk.com") just labels an item: only a known brand there is a lie.
+    const staysOnPage = !host.isIP && pageRegistrable(pageHost) === reg;
     extractDomainsFromText(linkText).forEach(function (d) {
       if (d.registrable === reg || reported.has(d.registrable)) return;
       const textGroups = officialGroupsOf(d.registrable);
       const sameOrg = Array.from(textGroups).some(function (g) { return destGroups.has(g); });
       if (sameOrg) return;
+      if (staysOnPage && textGroups.size === 0) return;
       reported.add(d.registrable);
       findings.push({
         level: isShortener || isTracker ? 'caution' : 'danger',
@@ -1324,9 +1330,15 @@
   function isSameSite(result, pageHost) {
     if (!result || !result.host || result.file || result.sender) return false;
     if (result.severity !== 'none' || result.host.isIP) return false;
+    const page = pageRegistrable(pageHost);
+    return !!page && page === result.host.registrableAscii;
+  }
+
+  /** Registrable domain of the page's hostname, or '' (IP, localhost, none). */
+  function pageRegistrable(pageHost) {
     const page = String(pageHost || '').toLowerCase().replace(/\.$/, '');
-    if (!page || isIPv4(page) || page.indexOf(':') !== -1 || page.indexOf('.') === -1) return false;
-    return splitHost(page).registrable === result.host.registrableAscii;
+    if (!page || isIPv4(page) || page.indexOf(':') !== -1 || page.indexOf('.') === -1) return '';
+    return splitHost(page).registrable;
   }
 
   return {

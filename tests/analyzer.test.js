@@ -182,6 +182,18 @@ check('IP page never same site', !same(analyzeLink('http://192.168.1.1/admin', '
 check('empty page host (file://)', !same(analyzeLink('https://example.com/', ''), ''));
 check('null result', !same(null, 'example.com'));
 
+// Text naming a domain on a link that stays on the page's site (v1.2.3)
+const onPage = (href, text, page) => analyzeLink(href, text, null, 0, page);
+r = onPage('https://dash.cloudflare.com/abc/bashouk.com', 'bashouk.com', 'dash.cloudflare.com');
+check('dashboard label: own-site link with a domain name is clean', r && r.severity === 'none', summary(r));
+check('dashboard label: and stays silent', same(r, 'dash.cloudflare.com'));
+r = onPage('https://phish-shop.com/login', 'paypal.com', 'www.phish-shop.com');
+check('own-site link still lies about a brand', r && r.severity === 'danger', summary(r));
+r = onPage('https://dash.cloudflare.com/abc', 'bashouk.com', 'www.other-site.com');
+check('other page: text lie still caught', r && r.severity === 'danger', summary(r));
+r = analyzeLink('https://dash.cloudflare.com/abc', 'bashouk.com');
+check('no page host: text lie still caught', r && r.severity === 'danger', summary(r));
+
 // --- Public Suffix List ------------------------------------------------------
 check('psl: eu.org neighbours differ', _internal.splitHost('foo.eu.org').registrable === 'foo.eu.org');
 check('psl: uk.com', _internal.splitHost('www.shop.uk.com').registrable === 'shop.uk.com');

@@ -66,6 +66,25 @@
   .res a.title.hover { text-decoration: underline; }
   .res .snip { font-size: 12.5px; color: #475569; line-height: 1.5; }
   .res .ad { font-weight: 700; color: #1e293b; font-size: 11px; margin-right: 2px; }
+
+  /* --- Portrait post (LinkedIn feed on a phone): 480x600 CSS px x2.25 = 1080x1350 --- */
+  html.post, html.post body { width: 480px; height: 600px; }
+  .post body { display: flex; flex-direction: column; justify-content: center; gap: 26px; }
+  .post .head { padding: 0 20px; height: auto; }
+  .post .head h1 { font-size: 34px; line-height: 1.1; }
+  .post .head p { margin-top: 10px; font-size: 15px; line-height: 1.4; }
+  .post .head p b { white-space: nowrap; }
+  .post .win { position: relative; inset: auto; margin: 0 14px; padding-bottom: 4px; border-radius: 12px; }
+  .post .mail { padding: 12px 16px; }
+  .post .serp { padding: 10px 16px; }
+  .post .win .mail, .post .win .serp { padding-bottom: 18px; }
+  .post .brand { position: static; height: auto; font-size: 13.5px; }
+  .post .brand { display: flex; }
+  .brand { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 62px;
+    align-items: center; justify-content: center; gap: 8px; font-size: 15px; color: #b4c2d8; }
+  .brand b { color: #fff; font-weight: 700; }
+  .brand .eye { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(135deg, #fff1a8, #c99a38); color: #3b2a06; font-size: 12px; font-weight: 800; }
 </style>
 <script>
   // Minimal stand-in for the extension APIs, so the real content scripts run here.
@@ -74,6 +93,7 @@
     window.SCENE = q.get('scene') || 'link';
     window.LANG = q.get('lang') === 'fr' ? 'fr' : 'en';
     document.documentElement.lang = window.LANG;
+    if (q.get('fmt') === 'post') document.documentElement.classList.add('post');
     var noop = function () {};
     window.chrome = {
       runtime: { getURL: function (p) { return '/' + p; }, onMessage: { addListener: noop }, sendMessage: noop },
@@ -96,6 +116,7 @@
 <body>
 <div class="head"><h1 id="h1"></h1><p id="sub"></p></div>
 <div class="win" id="win"></div>
+<div class="brand"><span class="eye">◉</span><b>Show Yourself</b><span id="brandTag"></span></div>
 
 <script>
   var T = {
@@ -145,12 +166,30 @@
     }
   }[LANG];
 
-  var LINK_TRAP = 'https://parcelg\u043e-delivery.com/pay';
+  var POST = document.documentElement.classList.contains('post');
+  var VIEW = new URLSearchParams(location.search).get('view');
+  // Portrait post, "ms" scene: a Microsoft look-alike ("rn" for "m", zero for "o").
+  T.ms = LANG === 'fr'
+    ? ['Ce n’est pas Microsoft.', 'Un <b>« rn »</b> imite le « m », un <b>zéro</b> remplace le « o ». Show Yourself le voit.']
+    : ['That is not Microsoft.', 'An <b>“rn”</b> plays the “m”, a <b>zero</b> plays the “o”. Show Yourself sees it.'];
+  if (VIEW === 'full') T.ms = LANG === 'fr'
+    ? ['Et il explique pourquoi.', 'Maintenez <b>Maj</b> : le détail lettre par lettre, et le piège en clair.']
+    : ['And it tells you why.', 'Hold <b>Shift</b>: letter-by-letter details, and the trap in plain words.'];
+  if (POST && SCENE === 'shady') T.shady = LANG === 'fr'
+    ? ['Un site louche ?', 'L’adresse commence par le bon nom, mais le vrai site est <b>track-fees.info</b>.']
+    : ['A suspicious website?', 'The address starts with the right name, but the real site is <b>track-fees.info</b>.'];
+  var MS = {
+    en: { subject: 'Your password expires today', body: 'Hello,<br>Your Microsoft account password expires today. Keep your current password to avoid losing access to your emails and files.', cta: 'Keep my current password', from: 'Microsoft account team' },
+    fr: { subject: 'Votre mot de passe expire aujourd’hui', body: 'Bonjour,<br>Le mot de passe de votre compte Microsoft expire aujourd’hui. Conservez votre mot de passe actuel pour garder l’accès à vos e-mails et fichiers.', cta: 'Conserver mon mot de passe', from: 'Équipe des comptes Microsoft' }
+  }[LANG];
+  var MS_TRAP = 'https://rnicr0soft.com/account/password';
+  var LINK_TRAP ='https://parcelg\u043e-delivery.com/pay';
   var SHADY = 'https://parcelgo.com.track-fees.info/pay';
   var SAFE = 'https://www.parcelgo.com/track';
 
   document.getElementById('h1').textContent = T[SCENE][0];
   document.getElementById('sub').innerHTML = T[SCENE][1];
+  document.getElementById('brandTag').textContent = LANG === 'fr' ? '· extension Chrome gratuite' : '· free Chrome extension';
 
   function mail(opts) {
     var sender = opts.sender
@@ -169,6 +208,14 @@
       file + '</div>';
   }
 
+  function msMail() {
+    return '<div class="bar"><span class="app">✉ ' + T.mail + '</span></div>' +
+      '<div class="mail"><h2 class="subject">' + MS.subject + '</h2>' +
+      '<div class="from"><div class="avatar" style="background:#475569">M</div><div class="who"><span class="name">' + MS.from + '</span><div class="to">' + T.to + '</div></div></div>' +
+      '<div class="card"><div class="logo" style="color:#475569">Microsoft</div><p>' + MS.body + '</p>' +
+      '<a class="btn" id="target-link" style="background:#2563eb" href="' + MS_TRAP + '">' + MS.cta + '</a></div></div>';
+  }
+
   function serp(trapFirst) {
     var shady = '<div class="res"><div class="site"><div class="fav">P</div><div><span class="ad">' + T.sponsored + '</span> ParcelGo<small>parcelgo.com › pay</small></div></div>' +
       '<a class="title" ' + (trapFirst ? 'id="target-link" ' : '') + 'href="' + SHADY + '">' + T.shadyTitle + '</a>' +
@@ -182,10 +229,13 @@
     return '<div class="bar"><span class="app">' + T.search + '</span><span class="search">🔍&nbsp; ' + T.query + '</span></div>' +
       // The safe scene has no stats line, so the bubble opens below the link instead of over the headline.
       '<div class="serp">' + (trapFirst ? '<div class="stats">' + T.stats + '</div>' : '') +
-      (trapFirst ? shady + safe : safe + help) + '</div>';
+      // Portrait post: the trap sits lower, so the bubble opens over other results, not the headline.
+      // Portrait post: the trap sits last, so the expanded bubble opens over other results, not the headline.
+      (trapFirst ? (POST && VIEW === 'full' ? safe + help + shady : shady + safe) : safe + help) + '</div>';
   }
 
   document.getElementById('win').innerHTML = {
+    ms: msMail,
     link: function () { return mail({ link: true }); },
     sender: function () { return mail({ sender: true }); },
     file: function () { return mail({ file: true }); },
@@ -204,12 +254,15 @@
   // Opens the bubble on the scene's target, points the magnifier at one letter,
   // optionally expands the details, then flags the page as ready.
   var PLAN = {
+    ms: { focus: 'cr0', expand: false },
     link: { focus: '[\u043e]', expand: false },
     sender: { expand: true },
     file: { expand: true },
     shady: { focus: 'track-fees', expand: true },
     safe: { focus: 'parcelgo', expand: true }
   }[SCENE];
+  // Portrait post: compact one-line bubble, or the expanded details with view=full.
+  if (POST) PLAN.expand = VIEW === 'full';
 
   function ready() { document.title = 'READY'; }
 

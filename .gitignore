@@ -21,6 +21,8 @@ CLAUDE.local.md
 dist/
 build/
 store/show-yourself-*/
+# Social media images, made with: node store/screenshots/src/capture.mjs --post
+store/social/
 
 # --- Dependencies / caches --------------------------------------------------
 node_modules/
